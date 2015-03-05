@@ -161,7 +161,7 @@ namespace DAVM.ViewModels
 
 			if (!wrongSettings)
             {
-                try
+				try
 				{
 					FileInfo newSettingsFile = new FileInfo(Properties.Settings.Default.PublishSettingsFile);
 					var initResult = App.GlobalConfig.VMController.InitializeController(newSettingsFile);
@@ -184,9 +184,11 @@ namespace DAVM.ViewModels
 				catch (Exception fe)
 				{
 					Logger.LogEntry("Cannot save settings", fe);
-                    wrongSettings = true;
-                }
+					wrongSettings = true;
+				}
             }
+
+			App.GlobalConfig.IsWellConfigured = !wrongSettings;
 
 			//if (wrongSettings && NotifyUser != null)
 			if (wrongSettings)

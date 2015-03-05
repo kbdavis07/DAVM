@@ -23,7 +23,9 @@ namespace DAVM.Common
 		public static String PH_PORT = "%PORT%";
 		#endregion
 
-		public bool IsWellConfigured { get; set; }
+		private bool _isWellConfigured = false;
+		public bool IsWellConfigured { get { return _isWellConfigured; } set { _isWellConfigured = value; RaisePropertyChanged("IsWellConfigured"); } }
+
         public AzureVMController VMController { get; set; }
 
 		#region Wiews
