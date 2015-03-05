@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.22310.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAVM", "DAVM\DAVM.csproj", "{79B12DB6-15F9-4B7C-8CF6-1A00897F153D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		OFFLINE|Any CPU = OFFLINE|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79B12DB6-15F9-4B7C-8CF6-1A00897F153D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79B12DB6-15F9-4B7C-8CF6-1A00897F153D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79B12DB6-15F9-4B7C-8CF6-1A00897F153D}.OFFLINE|Any CPU.ActiveCfg = OFFLINE|Any CPU
+		{79B12DB6-15F9-4B7C-8CF6-1A00897F153D}.OFFLINE|Any CPU.Build.0 = OFFLINE|Any CPU
+		{79B12DB6-15F9-4B7C-8CF6-1A00897F153D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79B12DB6-15F9-4B7C-8CF6-1A00897F153D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection	
+EndGlobal

@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Application x:Class="DAVM.App" StartupUri="/Views/MainView.xaml" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:davmViewModels="clr-namespace:DAVM.ViewModels" 
+		xmlns:davm="clr-namespace:DAVM"
+		xmlns:davmModel="clr-namespace:DAVM.Model"
+		xmlns:davmCommon="clr-namespace:DAVM.Common"
+        xmlns:davmControls="clr-namespace:DAVM.Controls" 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d1p1:Ignorable="d" 
+        xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006">
+	<Application.Resources>
+		<ResourceDictionary>
+			<davmViewModels:ViewModelLocator x:Key="Locator" d:IsDataSource="True" />
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Colors.xaml" />
+				<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+				<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+				<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/Blue.xaml" />
+				<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml" />
+				<ResourceDictionary Source="/Resources/Icons.xaml" />
+				<!--<ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/FlatButton.xaml" />-->
+				<ResourceDictionary Source="/Resources/DefaultDictionary.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</Application.Resources>
+</Application>

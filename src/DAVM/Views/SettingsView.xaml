@@ -1,0 +1,128 @@
+﻿<Controls:MetroWindow x:Class="DAVM.Views.SettingsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:davm="clr-namespace:DAVM"
+		xmlns:davmModel="clr-namespace:DAVM.Model"
+		xmlns:davmCommon="clr-namespace:DAVM.Common"
+        xmlns:davmControls="clr-namespace:DAVM.Controls" 
+        xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        DataContext="{Binding Source={StaticResource Locator}, Path=Settings}"
+        WindowStyle="ToolWindow"
+        ResizeMode="NoResize"
+        ShowCloseButton="False"
+        ShowMaxRestoreButton="False"
+        ShowMinButton="False"
+        WindowStartupLocation="CenterOwner"
+        Title="Settings" ShowInTaskbar="False" WindowState="Normal" Height="300" Width="450">
+    <Controls:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Controls:MetroWindow.Resources>
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="110"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="0"/>
+            <RowDefinition Height="0"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+		<TextBlock Grid.Column="0" Grid.Row="0" VerticalAlignment="Top" TextWrapping="Wrap">
+			<Bold>Publish Settings</Bold>
+			<LineBreak/>
+			<Underline>Required</Underline>
+			<LineBreak/>
+			<Italic>
+				azure subscription configuration file, must be downloaded from azure portal
+			</Italic>
+			</TextBlock>
+        <Grid Grid.Column="1" Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Row="1">
+                <Binding Path="PublishSettingsFile" Mode="TwoWay">
+                    <Binding.ValidationRules>
+                        <davmCommon:FileExistValidationRule />
+                    </Binding.ValidationRules>
+                </Binding>
+            </TextBox>
+            <Button Grid.Column="1" Grid.Row="1" Width="40" Height="25" VerticalAlignment="Center" Content="..." Command="{Binding CmdSelectPublishSettings}"/>
+            <Button Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Width="200" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Content="Download Publish Settings" Command="{Binding CmdDownloadPublishSettings}"/>
+        </Grid>
+
+        <TextBlock Grid.Column="0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top">
+			<Bold>SSH client</Bold>
+			<LineBreak/>
+			<Underline>Optional</Underline>
+			<LineBreak/>
+			<Italic>
+				program to use for remote connection to UNIX machines, reccomended <Hyperlink RequestNavigate="HandleRequestNavigate" NavigateUri="http://the.earth.li/~sgtatham/putty/latest/x86/putty.exe">PUTTY</Hyperlink> 
+			</Italic>
+		</TextBlock>
+         <Grid Grid.Column="1" Grid.Row="1" Margin="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Row="0">
+                <Binding Path="SSHClient" Mode="TwoWay">
+                    <Binding.ValidationRules>
+                        <davmCommon:FileExistValidationRule />
+                    </Binding.ValidationRules>
+                </Binding>
+            </TextBox>
+            <Button Grid.Column="1" Grid.Row="0" Width="40" Height="25" VerticalAlignment="Center" Content="..." Command="{Binding CmdSelectSSHClient}"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="Command line arguments:" />
+            <TextBox Grid.Row="2"  Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding SSHClientArguments}" Margin="0,0,5,0" />
+            <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" FontSize="11" HorizontalAlignment="Right" Margin="0,0,5,0" FontStyle="Italic" Text="placeholders: %FQDN% - %PORT%" />
+        </Grid>
+        
+        <!--<TextBlock Grid.Column="0" Grid.Row="0" VerticalAlignment="Top">Azure Powershell</TextBlock>
+        <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Visibility="{Binding IsAzurePowershellInstalled, Converter={StaticResource BoolToVisibility}}">
+            <Rectangle Fill="Green" Opacity="0.7" Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Left">
+                <Rectangle.OpacityMask>
+                    <VisualBrush Visual="{StaticResource appbar_os_windows_8}" Stretch="Fill" />
+                </Rectangle.OpacityMask>
+            </Rectangle>
+            <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">Installed</TextBlock>
+        </StackPanel>-->
+
+        <!--<StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Visibility="{Binding IsAzurePowershellNotInstalled, Converter={StaticResource BoolToVisibility}}">
+            <Rectangle Fill="Red" Opacity="0.7" Width="20" Height="20" VerticalAlignment="Center" HorizontalAlignment="Left">
+                <Rectangle.OpacityMask>
+                    <VisualBrush Visual="{StaticResource appbar_os_windows_8}" Stretch="Fill" />
+                </Rectangle.OpacityMask>
+            </Rectangle>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">Not installed</TextBlock>
+                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
+                      <Hyperlink RequestNavigate="HandleRequestNavigate" x:Name="hl1" NavigateUri="http://go.microsoft.com/?linkid=9811175">   
+                          Click here to install
+             </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </StackPanel>-->
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="5" Grid.ColumnSpan="2">
+            <Button Content="Cancel" Command="{Binding CmdCancel}" Height="25" Width="80"></Button>
+            <Button Content="Save" Command="{Binding CmdSave}" Height="25" Margin="5,0,0,0" Width="80"></Button>
+        </StackPanel>
+
+    </Grid>
+</Controls:MetroWindow>

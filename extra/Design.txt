@@ -1,0 +1,2 @@
+Main Azure Color #00adef
+icons: https://www.iconfinder.com/iconsets/metro-uinvert-dock
