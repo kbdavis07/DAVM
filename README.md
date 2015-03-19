@@ -18,6 +18,12 @@ It's the typical scenario for test environment where you need to pause all VMs o
 * "Start all" and "Stop all" buttons to change all Virtual Machines status at the same time 
 * Based on official Windows Azure SDK to interact with cloud services
 * Status bar and Log file to simplify troubleshooting 
-* Download of  Windows Azure Subscription information from Windows Azure Portal 
+* Download of Windows Azure Subscription information from Windows Azure Portal 
 * Direct link to Azure management portals
-* Direct link to Azure SDP troublehsooting package (Official MS tool)
+* Direct link to Azure SDP troublehsooting package 
+
+## Download
+Get compiled version from [here](http://davm.azurewebsites.net/files/davm.zip).
+
+## Website
+Official website: [http://davm.azurewebsites.net/](http://davm.azurewebsites.net/)
