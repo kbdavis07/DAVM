@@ -469,14 +469,15 @@ namespace DAVM.Model
 						//dynamic ncs = cs ;
 						foreach (InputEndpoint ie in cs.InputEndpoints)
 						{
-							if (ie.Name == "Remote Desktop")
+							if (ie.LocalPort == 3389 || (ie.Name.IndexOf("rdp", StringComparison.OrdinalIgnoreCase) >= 0) || (ie.Name.IndexOf("desktop", StringComparison.OrdinalIgnoreCase) >= 0))
 							{
 								vm.RemoteConnectionType = RemoteConnectionType.RDP;
 								vm.RemoteConnectionPort = ie.Port.Value;
 								Logger.LogEntry(LogType.Verbose, "Found RDP endpoint for " + vm.Name);
 							}
-							if (ie.Name == "SSH")
+							if (ie.Name.IndexOf("ssh", StringComparison.OrdinalIgnoreCase) >= 0)
 							{
+                                //if ssh is in the name
 								vm.RemoteConnectionType = RemoteConnectionType.SSH;
 								vm.RemoteConnectionPort = ie.Port.Value;
 								Logger.LogEntry(LogType.Verbose, "Found SSH endpoint for " + vm.Name);
