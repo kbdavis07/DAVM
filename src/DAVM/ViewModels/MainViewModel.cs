@@ -63,7 +63,7 @@ namespace DAVM.ViewModels
 
         public void RefreshAll()
         {
-			App.GlobalConfig.CurrentSubscription.RetrieveVMs();
+			App.GlobalConfig.CurrentSubscription.RetrieveAllAsync();
         }
 
 		#region Commands

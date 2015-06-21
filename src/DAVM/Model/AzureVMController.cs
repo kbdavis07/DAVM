@@ -1,4 +1,6 @@
 ﻿using Microsoft.WindowsAzure;
+using Microsoft.WindowsAzure.Management.WebSites.Models;
+using Microsoft.WindowsAzure.Management.WebSites;
 using Microsoft.WindowsAzure.Management.Compute;
 using Microsoft.WindowsAzure.Management.Compute.Models;
 using System;
@@ -17,18 +19,20 @@ using System.Linq;
 using System.Windows.Shell;
 using DAVM.Common;
 using System.Collections.Generic;
+using Microsoft.WindowsAzure.WebSitesExtensions;
 
 namespace DAVM.Model
 {
 	/// <remarks>Singleton</remarks>
-	public class AzureVMController : ModelBase
+	public class AzureVMController : AzureResource
 	{
 		private static volatile AzureVMController instance;
 		private static object syncRoot = new Object();
 
-		private static Timer _pollingTimer = new Timer(new TimerCallback(PollingVMStatus), null, 0, 15 * 1000);
+		private static Timer _pollingTimer = new Timer(new TimerCallback(PollingStatus), null, 0, 15 * 1000);
 		private static HashSet<AzureVM> _VMToRefresh = new HashSet<AzureVM>();
-		private DirectoryInfo WorkingFolder { get; set; }
+        private static HashSet<AzureWebSite> _WebsiteToRefresh = new HashSet<AzureWebSite>();
+        private DirectoryInfo WorkingFolder { get; set; }
 
 		//events used to notify the UI/ViewModels that the controller is busy or not
 		public event EventHandler WorkStarted;
@@ -61,6 +65,10 @@ namespace DAVM.Model
 			return instance;
 		}
 
+        public async Task RetrieveAllAsync(AzureSubscription subscription) {
+            RetrieveVMsAsync(subscription);
+            RetrieveWebsitesAsync(subscription);
+        }
 
 		#region Properties
 		/// <summary>
@@ -75,23 +83,23 @@ namespace DAVM.Model
 		public bool ControllerInitialized;
 
 
-
 		public virtual ObservableCollection<AzureSubscription> AzureSubscriptions
 		{
 			get;
 			set;
 		}
 
-		#endregion
+        #endregion
 
-
-		private void RaiseCompletedEvent()
+        #region Events
+        private void RaiseCompletedEvent()
 		{
 			IsWorking = false;
 			if (WorkCompleted != null)
 				foreach(var m in WorkCompleted.GetInvocationList())
 						m.DynamicInvoke(this,null);
 		}
+
 		private void RaiseStartedEvent()
 		{
 			IsWorking = true;
@@ -99,7 +107,6 @@ namespace DAVM.Model
 				foreach (var m in WorkCompleted.GetInvocationList())
 					m.DynamicInvoke(this, null);
 		}
-
 
 		public async Task StartAllAsync(AzureSubscription subscription)
 		{
@@ -121,7 +128,6 @@ namespace DAVM.Model
 
 			});
 		}
-
 
 		public async Task StopAllAsync(AzureSubscription subscription)
 		{
@@ -146,11 +152,13 @@ namespace DAVM.Model
 			});
 
 		}
+        #endregion
 
-		public async Task StopVMAsync(AzureVM vm)
+        #region VM
+        public async Task StopResourceAsync(AzureVM vm)
 		{
 			//could not do anything when the status is pending
-			if (vm.Status == VMStatus.Deallocated)
+			if (vm.Status == ResourceStatus.Deallocated)
 				return;
 
 			if (!ControllerInitialized)
@@ -171,14 +179,14 @@ namespace DAVM.Model
 			try
 			{
 				
-				vm.Status = VMStatus.Stopping;
+				vm.Status = ResourceStatus.Stopping;
 
 				ComputeManagementClient client = new ComputeManagementClient(vm.Subscription.CloudCredentials);
 				var options = new VirtualMachineShutdownParameters();
 				options.PostShutdownAction = PostShutdownAction.StoppedDeallocated;
 				await client.VirtualMachines.ShutdownAsync(vm.ServiceName, vm.DeploymentName, vm.Name, options);
 
-				PollingVMStatus(vm);
+				PollingStatus(vm);
 				_VMToRefresh.Add(vm);
 
 			}
@@ -190,12 +198,12 @@ namespace DAVM.Model
 				//if so We just need to reissue the command after a random amount of time
 				if (azEx.ErrorCode == "ConflictError")
 				{
-					RegisterForLazyUpdate(vm, VMStatus.Deallocated);
+					RegisterForLazyUpdate(vm, ResourceStatus.Deallocated);
 				}
 			}
 			catch (Exception pse)
 			{
-				vm.Status = VMStatus.Error;
+				vm.Status = ResourceStatus.Error;
 				Logger.LogEntry("Could not stop " + vm.Name, pse);
 				throw new Exception("Stop failed");
 			}
@@ -207,10 +215,34 @@ namespace DAVM.Model
 #endif
 		}
 
-		public async Task StartVMAsync(AzureVM vm)
+        public async Task StopResourceAsync(AzureResource resource)
+        {
+            if (resource != null)
+            {
+                if (resource.GetType() == typeof(AzureWebSite))
+                    StopResourceAsync((AzureWebSite)resource);
+                else if (resource.GetType().BaseType == typeof(AzureVM))
+                    StopResourceAsync((AzureVM)resource);
+            }
+
+        }
+
+        public async Task StartResourceAsync(AzureResource resource)
+        {
+            if (resource != null)
+            {
+                if (resource.GetType() == typeof(AzureWebSite))
+                    StartResourceAsync((AzureWebSite)resource);
+                else if (resource.GetType().BaseType == typeof(AzureVM))
+                    StartResourceAsync((AzureVM)resource);
+            }
+        }
+
+
+        public async Task StartResourceAsync(AzureVM vm)
 		{
 			//could not do anything when the status is pending
-			if (vm.Status == VMStatus.Running)
+			if (vm.Status == ResourceStatus.Running)
 				return;
 
 			if (!ControllerInitialized)
@@ -232,7 +264,7 @@ namespace DAVM.Model
 			{
 				RaiseStartedEvent();
 
-				vm.Status = VMStatus.Starting;
+				vm.Status = ResourceStatus.Starting;
 
 				ComputeManagementClient client = new ComputeManagementClient(vm.Subscription.CloudCredentials);
 				await client.VirtualMachines.StartAsync(vm.ServiceName, vm.DeploymentName, vm.Name);
@@ -247,12 +279,12 @@ namespace DAVM.Model
 				//if so We just need to reissue the command after a random amount of time
 				if (azEx.ErrorCode == "ConflictError")
 				{
-					RegisterForLazyUpdate(vm,VMStatus.Running);
+					RegisterForLazyUpdate(vm,ResourceStatus.Running);
 				}
 			}
 			catch (Exception pse)
 			{
-				vm.Status = VMStatus.Error;
+				vm.Status = ResourceStatus.Error;
 				Logger.LogEntry("Could not start " + vm.Name, pse);
 				throw new Exception("Start failed");
 			}
@@ -264,8 +296,15 @@ namespace DAVM.Model
 #endif
 		}
 
-		private async void RegisterForLazyUpdate(AzureVM vm, VMStatus toStatus)
+        /// <summary>
+        /// Try to start/stop a VM with retry-logic
+        /// </summary>
+		private async void RegisterForLazyUpdate(AzureVM vm, ResourceStatus toStatus)
 		{
+            //sometime azure does not accept new operation for a while
+            //the status change is not live, has a delay period
+            //this method try multiple time until the status is transitioned to the target value
+
 			Random r = new Random();
 			int waitTime = r.Next(20, 60);
 
@@ -276,11 +315,11 @@ namespace DAVM.Model
 				//wait a random amount of time before to try again
 				await Task.Delay(1000 * waitTime);
 
-				if(toStatus == VMStatus.Running)
-					await StartVMAsync(vm);
+				if(toStatus == ResourceStatus.Running)
+					await StartResourceAsync(vm);
 
-				if (toStatus == VMStatus.Deallocated)
-					await StopVMAsync(vm);
+				if (toStatus == ResourceStatus.Deallocated)
+					await StopResourceAsync(vm);
 			}
 		}
 
@@ -348,7 +387,7 @@ namespace DAVM.Model
 									{
 										var vm = RetrieveVM(deployment, subscription, role, service);
 										//this will check the status until its reach a Ready or StoppedDeallocated 
-										if(vm.Status != VMStatus.Running && vm.Status != VMStatus.Deallocated)
+										if(vm.Status != ResourceStatus.Running && vm.Status != ResourceStatus.Deallocated)
 											_VMToRefresh.Add(vm);
                                         lastVMNames.Add(vm.Name);
 									}
@@ -363,11 +402,11 @@ namespace DAVM.Model
 					{
 						var notFoundVMs = subscription.VMs.Where((v) => !lastVMNames.Contains(v.Name));
 						foreach (AzureVM vm in notFoundVMs)
-							subscription.VMs.Remove(vm);
+							subscription.Resources.Remove(vm);
 					}
 					);
 
-					Logger.LogEntry(LogType.Info, "Refresh completed");
+					Logger.LogEntry(LogType.Info, "VM Refresh completed");
 				}
 				catch (Exception pse)
 				{
@@ -383,6 +422,9 @@ namespace DAVM.Model
 
 		}
 
+        /// <summary>
+        /// Retrieve all the properties of a VM
+        /// </summary>
 		private AzureVM RetrieveVM(DeploymentGetResponse deployment, AzureSubscription subscription, Role role, HostedServiceListResponse.HostedService service)
 		{
 			//find the instance related to this VM, it does contains more information
@@ -401,7 +443,7 @@ namespace DAVM.Model
 				}
 
 				//because VMs are bound to UI                                            
-				Application.Current.Dispatcher.Invoke(()=>subscription.VMs.Add(vm)); 
+				Application.Current.Dispatcher.Invoke(()=>subscription.Resources.Add(vm)); 
 
             }
 
@@ -436,27 +478,25 @@ namespace DAVM.Model
 
 			switch (realInstance.InstanceStatus)
 			{
-				case RoleInstanceStatus.ReadyRole: { vm.Status = VMStatus.Running; break; }
-				case RoleInstanceStatus.CreatingVM: { vm.Status = VMStatus.Starting; break; }
-				case RoleInstanceStatus.CreatingRole: { vm.Status = VMStatus.Starting; break; }
-				case RoleInstanceStatus.DeletingVM: { vm.Status = VMStatus.Stopping; break; }
-				case RoleInstanceStatus.StartingVM: { vm.Status = VMStatus.Starting; break; }
-				case RoleInstanceStatus.StoppingVM: { vm.Status = VMStatus.Stopping; break; }
-				case RoleInstanceStatus.StoppedVM: { vm.Status = VMStatus.Off; break; }
-				case RoleInstanceStatus.RestartingRole: { vm.Status = VMStatus.Starting; break; }
-				case RoleInstanceStatus.BusyRole: { vm.Status = VMStatus.Updating; break; }
-				case RoleInstanceStatus.RoleStateUnknown: { vm.Status = VMStatus.Unknown; break; }
-				case RoleInstanceStatus.FailedStartingVM: { vm.Status = VMStatus.Error; break; }
-				case RoleInstanceStatus.FailedStartingRole: { vm.Status = VMStatus.Error; break; }
-				case RoleInstanceStatus.StartingRole: { vm.Status = VMStatus.Starting; break; }
-				case RoleInstanceStatus.StoppingRole: { vm.Status = VMStatus.Stopping; break; }
-				case RoleInstanceStatus.UnresponsiveRole: { vm.Status = VMStatus.Error; break; }
+				case RoleInstanceStatus.ReadyRole: { vm.Status = ResourceStatus.Running; break; }
+				case RoleInstanceStatus.CreatingVM: { vm.Status = ResourceStatus.Starting; break; }
+				case RoleInstanceStatus.CreatingRole: { vm.Status = ResourceStatus.Starting; break; }
+				case RoleInstanceStatus.DeletingVM: { vm.Status = ResourceStatus.Stopping; break; }
+				case RoleInstanceStatus.StartingVM: { vm.Status = ResourceStatus.Starting; break; }
+				case RoleInstanceStatus.StoppingVM: { vm.Status = ResourceStatus.Stopping; break; }
+				case RoleInstanceStatus.StoppedVM: { vm.Status = ResourceStatus.Off; break; }
+				case RoleInstanceStatus.RestartingRole: { vm.Status = ResourceStatus.Starting; break; }
+				case RoleInstanceStatus.BusyRole: { vm.Status = ResourceStatus.Updating; break; }
+				case RoleInstanceStatus.RoleStateUnknown: { vm.Status = ResourceStatus.Unknown; break; }
+				case RoleInstanceStatus.FailedStartingVM: { vm.Status = ResourceStatus.Error; break; }
+				case RoleInstanceStatus.FailedStartingRole: { vm.Status = ResourceStatus.Error; break; }
+				case RoleInstanceStatus.StartingRole: { vm.Status = ResourceStatus.Starting; break; }
+				case RoleInstanceStatus.StoppingRole: { vm.Status = ResourceStatus.Stopping; break; }
+				case RoleInstanceStatus.UnresponsiveRole: { vm.Status = ResourceStatus.Error; break; }
 				//this is OFF and deallocated --> not paying (FREE)
 				//this is not "documentated"
-				case "StoppedDeallocated": { vm.Status = VMStatus.Deallocated; break; }
-
-
-				default: { vm.Status = VMStatus.Unknown; break; }
+				case "StoppedDeallocated": { vm.Status = ResourceStatus.Deallocated; break; }
+				default: { vm.Status = ResourceStatus.Unknown; break; }
 			}
 
 			//search for any RDP endpoint
@@ -491,7 +531,222 @@ namespace DAVM.Model
 			return vm;
 		}
 
-		private static DeploymentGetResponse GetAzureDeyployment(ComputeManagementClient client, string serviceName, DeploymentSlot slot)
+        #endregion
+
+        #region Websites
+
+        public async Task RetrieveWebsitesAsync(AzureSubscription subscription)
+        {
+            if (!ControllerInitialized)
+            {
+                Logger.LogEntry(LogType.Warning, "Controller not ready");
+                return;
+            }
+
+            if (subscription == null)
+            {
+                Logger.LogEntry(LogType.Warning, "No subscription selected");
+                return;
+            }
+
+            Logger.LogEntry(LogType.Info, String.Format("Downloading Websites for \"{0}\"", subscription.Name));
+            RaiseStartedEvent();
+
+
+
+            await Task.Factory.StartNew(() =>
+            {
+                try
+                {
+
+                    //Application.Current.Dispatcher.Invoke(() => subscription.VMs.Clear());
+
+                    //1 command for all websites
+                    using (var client = new WebSiteManagementClient(subscription.CloudCredentials))
+                    {
+
+                        var webspaces = client.WebSpaces.List();
+                        HashSet<string> lastWebsiteNames = new HashSet<string>();
+                        foreach (var webspace in webspaces)
+                        {
+                            Logger.LogEntry(LogType.Info, "Webspace found: " + webspace.Name);
+                            var websites = client.WebSpaces.ListWebSites(webspace.Name, new WebSiteListParameters()).ToList();
+                            foreach (var w in websites)
+                            {                             
+                                AzureWebSite appWeb = new AzureWebSite(subscription);
+                                appWeb.Name = w.Name;
+                                appWeb.WebspaceName = webspace.Name;
+                                appWeb.Plan = w.Sku;                                
+                                appWeb.Location = webspace.GeoRegion;
+                                appWeb.FQDNs = new HashSet<string>(w.HostNames);
+                                Logger.LogEntry(LogType.Info, "Website found: " + w.Name);
+                                switch (w.State) {
+                                    case "Running": { appWeb.Status = ResourceStatus.Running;  break; }
+                                    case "Stopped": { appWeb.Status = ResourceStatus.Off; break; }
+                                    default: { appWeb.Status = ResourceStatus.Unknown;  break; }
+                                }
+
+                                //this will check the status until its reach a Ready or StoppedDeallocated 
+                                if (appWeb.Status != ResourceStatus.Running && appWeb.Status != ResourceStatus.Deallocated)
+                                    _WebsiteToRefresh.Add(appWeb);
+                                
+                                //because VMs are bound to UI                                            
+                                Application.Current.Dispatcher.Invoke(() => subscription.Resources.Add(appWeb));
+
+                                //TODO: Maybe is not unique 
+                                lastWebsiteNames.Add(appWeb.Name);
+                            }
+                        }
+
+                        //if a Website has been deleted whilst this program was open, I do not get the update
+                        //I need to clean the main collection, removing all the stale Websites 
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            var notFoundWebsite = subscription.Websites.Where((v) => !lastWebsiteNames.Contains(v.Name));
+                            foreach (AzureWebSite w in notFoundWebsite)
+                                subscription.Resources.Remove(w);
+                        }
+                        );
+                    }
+
+                    Logger.LogEntry(LogType.Info, "Website Refresh completed");
+                }
+                catch (Exception pse)
+                {
+                    Logger.LogEntry("Could not retrieve VMs", pse);
+                }
+                finally
+                {
+                    RaiseCompletedEvent();
+                }
+            }
+            );
+        }
+
+        public async Task StopResourceAsync(AzureWebSite website)
+        {
+            if (website.Status == ResourceStatus.Off)
+                return;
+
+            if (!ControllerInitialized)
+            {
+                Logger.LogEntry(LogType.Warning, "Controller not ready");
+                return;
+            }
+
+            Logger.LogEntry(LogType.Info, "Stopping " + website.Name);
+            RaiseStartedEvent();
+#if OFFLINE
+            			await Task.Delay(5000);
+            			website.Status = ResourceStatus.Off;
+            			RaiseCompletedEvent();
+            			return;
+#else
+            try
+            {
+                RaiseStartedEvent();
+
+                website.Status = ResourceStatus.Stopping;
+
+                WebSiteManagementClient client = new WebSiteManagementClient(website.Subscription.CloudCredentials);
+                var deploymentResponse = client.WebSites.Get(website.WebspaceName, website.Name, null);
+                var par = new WebSiteUpdateParameters();
+                par.State = "Stopped";
+                par.HostNames = website.FQDNs.ToList();
+
+                client.WebSites.Update(deploymentResponse.WebSite.WebSpace, deploymentResponse.WebSite.Name, par);
+
+                _WebsiteToRefresh.Add(website);
+
+            }
+            catch (Microsoft.WindowsAzure.CloudException azEx)
+            {
+                //if another istance with the same deploymentID (==same cloud service) is starting/stopping, we cannot issue any command and need to wait
+                //otherwise will get the following error:
+                //     "ConflictError: Windows Azure is currently performing an operation with x-ms-requestid c5c29f4e69d270578f78d66e4282c9c4 on this deployment that requires exclusive access."
+                //if so We just need to reissue the command after a random amount of time
+                if (azEx.ErrorCode == "ConflictError")
+                {
+                    //RegisterForLazyUpdate(vm, VMStatus.Running);
+                }
+            }
+            catch (Exception pse)
+            {
+                website.Status = ResourceStatus.Error;
+                Logger.LogEntry("Could not stop " + website.Name, pse);
+                throw new Exception("Stop failed");
+            }
+            finally
+            {
+                RaiseCompletedEvent();
+            }
+
+#endif
+        }
+
+        public async Task StartResourceAsync(AzureWebSite website)
+        {      
+            if (website.Status == ResourceStatus.Running)
+                return;
+
+            if (!ControllerInitialized)
+            {
+                Logger.LogEntry(LogType.Warning, "Controller not ready");
+                return;
+            }
+
+            Logger.LogEntry(LogType.Info, "Starting " + website.Name);
+            RaiseStartedEvent();
+#if OFFLINE
+            			await Task.Delay(5000);
+            			website.Status = ResourceStatus.Running;
+            			RaiseCompletedEvent();
+            			return;
+#else
+            try
+            {
+                RaiseStartedEvent();
+
+                website.Status = ResourceStatus.Starting;
+
+                WebSiteManagementClient client = new WebSiteManagementClient(website.Subscription.CloudCredentials);
+                var deploymentResponse = client.WebSites.Get(website.WebspaceName, website.Name, null);
+                var par = new WebSiteUpdateParameters();
+                par.State = "Running";
+                par.HostNames = website.FQDNs.ToList();
+
+                client.WebSites.Update(deploymentResponse.WebSite.WebSpace, deploymentResponse.WebSite.Name, par);
+
+                _WebsiteToRefresh.Add(website);
+
+            }
+            catch (Microsoft.WindowsAzure.CloudException azEx)
+            {
+                //if another istance with the same deploymentID (==same cloud service) is starting/stopping, we cannot issue any command and need to wait
+                //otherwise will get the following error:
+                //     "ConflictError: Windows Azure is currently performing an operation with x-ms-requestid c5c29f4e69d270578f78d66e4282c9c4 on this deployment that requires exclusive access."
+                //if so We just need to reissue the command after a random amount of time
+                if (azEx.ErrorCode == "ConflictError")
+                {
+                    //RegisterForLazyUpdate(vm, VMStatus.Running);
+                }
+            }
+            catch (Exception pse)
+            {
+                website.Status = ResourceStatus.Error;
+                Logger.LogEntry("Could not start " + website.Name, pse);
+                throw new Exception("Start failed");
+            }
+            finally
+            {
+                RaiseCompletedEvent();
+            }
+
+#endif
+        }
+#endregion
+
+        private static DeploymentGetResponse GetAzureDeyployment(ComputeManagementClient client, string serviceName, DeploymentSlot slot)
 		{
 			try
 			{
@@ -597,67 +852,97 @@ namespace DAVM.Model
 			}
 		}
 
-		/// <summary>
-		/// Check the VM status until it is Ready or Stopped, maximum 5 minutes
-		/// </summary>
-		/// <param name="vm"></param>
-		public static void PollingVMStatus(object state)
-		{
-#if DEBUG
-			Logger.LogEntry(LogType.Verbose, "Polling thread ran");
-#endif
-			if (_VMToRefresh.Count > 0)
-			{
-				try
-				{
-					var firtVm = _VMToRefresh.First();
-					ComputeManagementClient client = new ComputeManagementClient(firtVm.Subscription.CloudCredentials);
-					var deploymentResponse = client.Deployments.GetByName(firtVm.ServiceName, firtVm.DeploymentName);
-					foreach (var roleInstance in deploymentResponse.RoleInstances)
-					{
-						var vm = _VMToRefresh.Where((v) => v.Name == roleInstance.InstanceName).FirstOrDefault();
-						if (vm != null)
-						{
-							var previousStatus = vm.Status;
+        /// <summary>
+        /// Check the status of pending resources until it is Ready or Stopped, maximum 5 minutes
+        /// </summary>
+        /// <param name="vm"></param>
+        public static void PollingStatus(object state)
+        {
 
-							switch (roleInstance.InstanceStatus)
-							{
-								case RoleInstanceStatus.ReadyRole: { vm.Status = VMStatus.Running; _VMToRefresh.Remove(vm); break; }
-								case RoleInstanceStatus.StartingVM: { vm.Status = VMStatus.Starting; break; }
-								case RoleInstanceStatus.StoppingVM: { vm.Status = VMStatus.Stopping; break; }
-								case RoleInstanceStatus.CreatingVM: { vm.Status = VMStatus.Starting; break; }
-								case RoleInstanceStatus.CreatingRole: { vm.Status = VMStatus.Starting; break; }
-								case RoleInstanceStatus.DeletingVM: { vm.Status = VMStatus.Stopping; break; }
-								case RoleInstanceStatus.StoppedVM: { vm.Status = VMStatus.Off; _VMToRefresh.Remove(vm); break; }
-								case RoleInstanceStatus.RestartingRole: { vm.Status = VMStatus.Starting; break; }
-								case RoleInstanceStatus.BusyRole: { vm.Status = VMStatus.Updating; break; }
-								case RoleInstanceStatus.RoleStateUnknown: { vm.Status = VMStatus.Unknown; break; }
-								case RoleInstanceStatus.FailedStartingVM: { vm.Status = VMStatus.Error; break; }
-								case RoleInstanceStatus.FailedStartingRole: { vm.Status = VMStatus.Error; break; }
-								case RoleInstanceStatus.StartingRole: { vm.Status = VMStatus.Starting; break; }
-								case RoleInstanceStatus.StoppingRole: { vm.Status = VMStatus.Stopping; break; }
-								case RoleInstanceStatus.UnresponsiveRole: { vm.Status = VMStatus.Error; break; }
-								//this is OFF and deallocated --> not paying (FREE)
-								//this is not "documentated"
-								case "StoppedDeallocated": { vm.Status = VMStatus.Deallocated; _VMToRefresh.Remove(vm); break; }
+            if (_WebsiteToRefresh.Count > 0)
+            {
+                try
+                {
+                    var website = _WebsiteToRefresh.First();
+                    WebSiteManagementClient client = new WebSiteManagementClient(website.Subscription.CloudCredentials);
+                    var deploymentResponse = client.WebSites.Get(website.WebspaceName, website.Name, new WebSiteGetParameters());
+                    var appWeb = deploymentResponse.WebSite;
 
-								default: { vm.Status = VMStatus.Unknown; break; }
-							}
-							Logger.LogEntry(LogType.Verbose, string.Format("Polling thread: Updated VM: {2} - status from {0} to {1}", previousStatus, vm.Status, vm.Name));
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					Logger.LogEntry("Polling thread error: ", ex);
-				}
-				finally
-				{
-					UIHelper.RegisterJumpList();
-				}
+                    var previousStatus = website.Status;
 
-			}
-		}
-	}
+                    switch (appWeb.State)
+                    {
+                        case "Running": { website.Status = ResourceStatus.Running; _WebsiteToRefresh.Remove(website); break; }
+                        case "Stopped": { website.Status = ResourceStatus.Off; _WebsiteToRefresh.Remove(website); break; }
+                        default: { website.Status = ResourceStatus.Unknown; break; }
+                    }
+                    Logger.LogEntry(LogType.Verbose, string.Format("Polling thread: Updated Website: {2} - status from {0} to {1}", previousStatus, website.Status, website.Name));
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogEntry("Polling thread error: ", ex);
+                }
+                finally
+                {
+                    //  UIHelper.RegisterJumpList();
+                }
+
+            }
+
+            if (_VMToRefresh.Count > 0)
+            {
+                try
+                {
+                    var firtVm = _VMToRefresh.First();
+                    ComputeManagementClient client = new ComputeManagementClient(firtVm.Subscription.CloudCredentials);
+                    var deploymentResponse = client.Deployments.GetByName(firtVm.ServiceName, firtVm.DeploymentName);
+                    foreach (var roleInstance in deploymentResponse.RoleInstances)
+                    {
+                        var vm = _VMToRefresh.Where((v) => v.Name == roleInstance.InstanceName).FirstOrDefault();
+                        if (vm != null)
+                        {
+                            var previousStatus = vm.Status;
+
+                            switch (roleInstance.InstanceStatus)
+                            {
+                                case RoleInstanceStatus.ReadyRole: { vm.Status = ResourceStatus.Running; _VMToRefresh.Remove(vm); break; }
+                                case RoleInstanceStatus.StartingVM: { vm.Status = ResourceStatus.Starting; break; }
+                                case RoleInstanceStatus.StoppingVM: { vm.Status = ResourceStatus.Stopping; break; }
+                                case RoleInstanceStatus.CreatingVM: { vm.Status = ResourceStatus.Starting; break; }
+                                case RoleInstanceStatus.CreatingRole: { vm.Status = ResourceStatus.Starting; break; }
+                                case RoleInstanceStatus.DeletingVM: { vm.Status = ResourceStatus.Stopping; break; }
+                                case RoleInstanceStatus.StoppedVM: { vm.Status = ResourceStatus.Off; _VMToRefresh.Remove(vm); break; }
+                                case RoleInstanceStatus.RestartingRole: { vm.Status = ResourceStatus.Starting; break; }
+                                case RoleInstanceStatus.BusyRole: { vm.Status = ResourceStatus.Updating; break; }
+                                case RoleInstanceStatus.RoleStateUnknown: { vm.Status = ResourceStatus.Unknown; break; }
+                                case RoleInstanceStatus.FailedStartingVM: { vm.Status = ResourceStatus.Error; break; }
+                                case RoleInstanceStatus.FailedStartingRole: { vm.Status = ResourceStatus.Error; break; }
+                                case RoleInstanceStatus.StartingRole: { vm.Status = ResourceStatus.Starting; break; }
+                                case RoleInstanceStatus.StoppingRole: { vm.Status = ResourceStatus.Stopping; break; }
+                                case RoleInstanceStatus.UnresponsiveRole: { vm.Status = ResourceStatus.Error; break; }
+                                //this is OFF and deallocated --> not paying (FREE)
+                                //this is not "documentated"
+                                case "StoppedDeallocated": { vm.Status = ResourceStatus.Deallocated; _VMToRefresh.Remove(vm); break; }
+
+                                default: { vm.Status = ResourceStatus.Unknown; break; }
+                            }
+                            Logger.LogEntry(LogType.Verbose, string.Format("Polling thread: Updated VM: {2} - status from {0} to {1}", previousStatus, vm.Status, vm.Name));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogEntry("Polling thread error: ", ex);
+                }
+                finally
+                {
+                    UIHelper.RegisterJumpList();
+                }
+
+            }
+        }
+
+
+    }
 }
 

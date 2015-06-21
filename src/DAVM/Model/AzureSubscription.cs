@@ -1,10 +1,12 @@
 ﻿using Microsoft.WindowsAzure;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace DAVM.Model
 {
-    public class AzureSubscription : ModelBase
+    public class AzureSubscription : AzureResource
     {
         public CertificateCloudCredentials CloudCredentials { get; private set; }
 
@@ -15,7 +17,8 @@ namespace DAVM.Model
 
             ID = subscriptionID;
             Controller = controller;            
-            VMs = new ObservableCollection<AzureVM>();
+            Resources = new ObservableCollection<AzureResource>();
+
             LastUpdate = DateTime.MinValue;
             Base64Certificate = base64Certificate;
             Name = name;
@@ -33,12 +36,28 @@ namespace DAVM.Model
 
         public  AzureVMController Controller { get; private set; }
 
-        public virtual ObservableCollection<AzureVM> VMs
+        public virtual ObservableCollection<AzureResource> Resources
         {
             get;
             set;
         }
 
+        public virtual List<AzureVM> VMs
+        {
+            get {
+                var vms= Resources.Where<AzureResource>((r) => r.GetType().BaseType == typeof(AzureVM));
+                return vms.Select<AzureResource,AzureVM>((x)=>(AzureVM)x).ToList();
+            }
+        }
+
+        public virtual IEnumerable<AzureWebSite> Websites
+        {
+            get
+            {
+                var vms = Resources.Where<AzureResource>((r) => r.GetType() == typeof(AzureWebSite));
+                return vms.Select<AzureResource, AzureWebSite>((x) => (AzureWebSite)x).ToList();
+            }
+        }
 
         private DateTime _LastUpdate;
         public DateTime LastUpdate
@@ -88,10 +107,10 @@ namespace DAVM.Model
             return Name;
         }
 
-        public async void RetrieveVMs()
+        public async void RetrieveAllAsync()
         {
             LastUpdate = DateTime.Now;
-            await Controller.RetrieveVMsAsync(this);
+            await Controller.RetrieveAllAsync(this);
         }
 
         public async void StartAll() {

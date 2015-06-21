@@ -243,10 +243,11 @@
     <Compile Include="Common\Logger.cs" />
     <Compile Include="Common\AppResources.cs" />
     <Compile Include="Model\AzureSubscription.cs" />
+    <Compile Include="Model\AzureWebsite.cs" />
     <Compile Include="Model\AzureVM.cs" />
     <Compile Include="Model\AzureVMController.cs" />
-    <Compile Include="Model\ModelBase.cs" />
-    <Compile Include="Model\VMStatus.cs" />
+    <Compile Include="Model\AzureResource.cs" />
+    <Compile Include="Model\StatusEnums.cs" />
     <Compile Include="ViewModels\AboutViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="Views\AboutView.xaml.cs">

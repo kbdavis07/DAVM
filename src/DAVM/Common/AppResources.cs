@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace DAVM.Common
 {
-    public class AppResources : ModelBase
+    public class AppResources : AzureResource
     {
         public FileInfo LogFileName { get; set; }
 

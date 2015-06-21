@@ -18,36 +18,18 @@ namespace DAVM.Model
 		SSH,
 		None
 	}
-    public class AzureVM : ModelBase
+
+    public class AzureVM : AzureResource
     {
         public AzureVM(AzureSubscription owner)
         {
             Subscription = owner;
 			RemoteConnectionPort = -1;
-			Status = VMStatus.Unknown;
+			Status = ResourceStatus.Unknown;
         }
-
-        public event EventHandler Started;
-        public event EventHandler Stopped;
-        public event EventHandler<Exception> ErrorOccured;
 
 		#region properties
-		public AzureSubscription Subscription { get; internal set; }
-        public bool CanBeStarted
-        {
-            get { return (Status != VMStatus.Running) && !IsWorking; }
-            set { }
-        }
-        public bool CanBeStopped
-        {
-            get { return (Status != VMStatus.Deallocated) && !IsWorking; }
-            set { }
-        }
-		public String Error
-        {
-            get;
-            set;
-        }
+		
 		public String DeploymentID
 		{
 			get;
@@ -73,20 +55,6 @@ namespace DAVM.Model
 			}
 		}
 
-		public String _name;
-        public String Name
-        {
-            get { return _name; }
-            set
-            {
-                if (value != _name)
-                {
-                    _name = value;
-                    RaisePropertyChanged("Name");
-                }
-            }
-        }
-
 		public String _os;
 		public String OS
 		{
@@ -103,7 +71,7 @@ namespace DAVM.Model
 
 		public bool SupportRemoteConnection
 		{
-			get { return (Status == VMStatus.Running) && RemoteConnectionPort > 0 && !IsWorking; }
+			get { return (Status == ResourceStatus.Running) && RemoteConnectionPort > 0 && !IsWorking; }
 			set { }
 		}
 
@@ -197,62 +165,12 @@ namespace DAVM.Model
             }
         }
 
-        public VMStatus _status;
-        public VMStatus Status
-        {
-            get { return _status; }
-            set
-            {
-                if (value != _status)
-                {
-					//special case, if the user started/stopped the VM, azure will answer with Unknown until has completely started/stopped
-					//this create confusion because the uer see this transition to UNKNOWN status -
-					//to avoid this I ignore this status if we are in the middle of a working
-					if (IsWorking && value == VMStatus.Unknown)
-						return;
-
-                    _status = value;
-                    IsWorking = false;
-
-                    switch (value)
-                    {
-						case VMStatus.Running:
-                            if (Started != null)
-                                Started.BeginInvoke(this, null,null,null);
-                            Logger.LogEntry(LogType.Info, Name + " started");
-                            break;
-						case VMStatus.Deallocated:
-                        case VMStatus.Off:
-                            if (Stopped != null)
-                                Stopped.BeginInvoke(this, null, null, null);
-                            Logger.LogEntry(LogType.Info, Name + " stopped");
-							break;
-						case VMStatus.Error:
-							if (ErrorOccured != null)
-								ErrorOccured.BeginInvoke(this, null, null, null);
-							break;
-						case VMStatus.Stopping:
-						case VMStatus.Starting:
-						case VMStatus.Updating:
-							IsWorking = true;
-							break;
-						default:
-							break;
-					}
-
-                    RaisePropertyChanged("Status");
-                    RaisePropertyChanged("CanBeStarted");
-                    RaisePropertyChanged("CanBeStopped");
-                    RaisePropertyChanged("SupportRemoteConnection");
-
-                }
-            }
-        }
+      
 		#endregion
 
 		#region methods
 
-		public string GetVerboseDetails() {
+		public override string GetVerboseDetails() {
 			StringBuilder sb = new StringBuilder();
 			sb.AppendFormat("[{0}]\n", Name);
 			sb.AppendLine(String.Format("Status: {0}", Status));
@@ -270,48 +188,8 @@ namespace DAVM.Model
 			return sb.ToString();
 		}
 
-		public async Task StartAsync()
-        {
-            try
-            {
-                IsWorking = true;
-                await Subscription.Controller.StartVMAsync(this);
-            }
-            catch (Exception e)
-            {
-				Logger.LogEntry("START error for " + this.Name ,e);
-                Error = "Cannot start the VM";
-                Status = VMStatus.Error;
-            }
-            //finally
-            //{
-            //    IsWorking = false;
-            //}
-
-
-        }
-
-        public async Task StopAsync()
-        {
-            try
-            {
-                IsWorking = true;
-                await Subscription.Controller.StopVMAsync(this);
-            }
-            catch (Exception e)
-            {
-				Logger.LogEntry("STOP error for " + this.Name, e);
-				Error = "Cannot stop the VM";
-                Status = VMStatus.Error;
-            }
-            //finally
-            //{
-            //    IsWorking = false;
-            //}
-        }
-
         /// <summary>
-        /// Two VM are equal is the service name and the hostname is the same
+        /// Two VM are equal if the service name and the hostname are the same
         /// </summary>
         /// <param name="obj"></param>
         public override bool Equals(object obj)

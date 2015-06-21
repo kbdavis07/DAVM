@@ -57,7 +57,7 @@ namespace DAVM.Views
                 //automatic refresh if the elapsed time is greater than 1 hour 
                 var timeDifference = (DateTime.Now - App.GlobalConfig.CurrentSubscription.LastUpdate);
                 if (timeDifference.Hours >= 1)
-                    App.GlobalConfig.CurrentSubscription.RetrieveVMs();
+                    App.GlobalConfig.CurrentSubscription.RetrieveAllAsync();
             }
         }
 

@@ -132,15 +132,15 @@
 				<ColumnDefinition Width="Auto" MinWidth="480"/>
 			</Grid.ColumnDefinitions>
 
-			<ListView SelectionMode="Single" Grid.Column="0" BorderThickness="0" x:Name="vmList" ItemsSource="{Binding Source={x:Static davm:App.GlobalConfig}, Path=CurrentSubscription.VMs}" >
-				<ListView.ItemTemplate>
-					<DataTemplate >
-						<davmControls:VMControl VM="{Binding}"  />
-					</DataTemplate>
-				</ListView.ItemTemplate>
-			</ListView>
-			
-			<davmControls:VMDetailControl Opacity="1" Grid.Column="1" VM="{Binding ElementName=vmList, Path=SelectedItem, Mode=OneWay}"></davmControls:VMDetailControl>
+            <ListView SelectionMode="Single" Grid.Column="0" BorderThickness="0" x:Name="vmList" ItemsSource="{Binding Source={x:Static davm:App.GlobalConfig}, Path=CurrentSubscription.Resources}" >
+                <ListView.ItemTemplate>
+                    <DataTemplate >
+                        <davmControls:VMControl Resource="{Binding}"  />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <davmControls:VMDetailControl Opacity="1" Grid.Column="1" VM="{Binding ElementName=vmList, Path=SelectedItem, Mode=OneWay}"></davmControls:VMDetailControl>
 			<GridSplitter ResizeDirection="Columns" Grid.Column="1" HorizontalAlignment="Left" BorderBrush="{StaticResource BlueAzure}" Grid.Row="0" Width="2" VerticalAlignment="Stretch" Margin="0" Visibility="{Binding ElementName=vmList, Path=SelectedItem, Mode=OneWay, Converter={StaticResource ExistToVisibility}}" />
 		</Grid>
 
