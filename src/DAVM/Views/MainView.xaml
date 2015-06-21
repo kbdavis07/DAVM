@@ -13,160 +13,196 @@
         ShowTitleBar="True"
 		BorderThickness="2"
         Title="Dashboard-AzureVM" MinHeight="480" MinWidth="900">
-	
-	<Controls:MetroWindow.Resources>
-		<davmCommon:InfoMessageToVisibilityConverter x:Key="InfoMessageToVisibility" />
-		<davmCommon:ExistToVisibilityConverter x:Key="ExistToVisibility" />
-		<davmCommon:IsEnabledToProgressStateConverter x:Key="IsEnabledToProgressState" />
-		<BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-	</Controls:MetroWindow.Resources>
 
-	<Controls:MetroWindow.RightWindowCommands>
-		<Controls:WindowCommands>
-			<Button Command="{Binding CmdSettings}" IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}">
-				<StackPanel Orientation="Horizontal">
-					<Rectangle Width="15" Height="15">
-						<Rectangle.Resources>
-							<SolidColorBrush x:Key="BlackBrush" Color="White" />
-						</Rectangle.Resources>
-						<Rectangle.Fill>
-							<VisualBrush Stretch="Fill" Visual="{StaticResource appbar_settings}" />
-						</Rectangle.Fill>
-					</Rectangle>
-					<!--<TextBlock Margin="5,0,0,0" Text="settings" />-->
-				</StackPanel>
-			</Button>
-			<Button Command="{Binding CmdSDP}" ToolTip="Download the Azure VM troubleshooting package (SDP)" >
-				<StackPanel Orientation="Horizontal">
-					<Rectangle Width="10" Height="10">
-						<Rectangle.Resources>
-							<SolidColorBrush x:Key="BlackBrush" Color="White" />
-						</Rectangle.Resources>
-						<Rectangle.Fill>
-							<VisualBrush Stretch="Fill" Visual="{StaticResource appbar_download}" />
-						</Rectangle.Fill>
-					</Rectangle>
-					<!--<TextBlock Margin="5,0,0,0" Text="about" />-->
-				</StackPanel>
-			</Button>
-			<Button Command="{Binding CmdAbout}">
-				<StackPanel Orientation="Horizontal">
-					<Rectangle Width="10" Height="10">
-						<Rectangle.Resources>
-							<SolidColorBrush x:Key="BlackBrush" Color="White" />
-						</Rectangle.Resources>
-						<Rectangle.Fill>
-							<VisualBrush Stretch="Fill" Visual="{StaticResource appbar_question}" />
-						</Rectangle.Fill>
-					</Rectangle>
-					<!--<TextBlock Margin="5,0,0,0" Text="about" />-->
-				</StackPanel>
-			</Button>
-		</Controls:WindowCommands>
-	</Controls:MetroWindow.RightWindowCommands>
+    <Controls:MetroWindow.Resources>
+        <davmCommon:InfoMessageToVisibilityConverter x:Key="InfoMessageToVisibility" />
+        <davmCommon:ExistToVisibilityConverter x:Key="ExistToVisibility" />
+        <davmCommon:IsEnabledToProgressStateConverter x:Key="IsEnabledToProgressState" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
-	<Window.TaskbarItemInfo>
-		<TaskbarItemInfo x:Name="mainTBII" ProgressState="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsWorking, Converter={StaticResource IsEnabledToProgressState}}" />
-	</Window.TaskbarItemInfo>
+        <CollectionViewSource x:Key="AzureResources"                               
+                      Source="{Binding Source={x:Static davm:App.GlobalConfig}, Path=CurrentSubscription.Resources}">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="AzureResourceType" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+    </Controls:MetroWindow.Resources>
 
-	<Grid x:Name="mainGrid">	
-		<VisualStateManager.VisualStateGroups>
-			<VisualStateGroup>
-				<VisualState x:Name="DefaultLayout">
-					<Storyboard>
-						<DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="welcomeScreen" From="0.2" To="0.0" Duration="0:0:1"/>
-						<DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="defaultScreen" From="0.0" To="1.0" Duration="0:0:1" />
-					</Storyboard>
-				</VisualState>
-				<VisualState x:Name="WelcomeLayout">
-					<Storyboard>
-						<DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="welcomeScreen" From="0.0" To="0.2" Duration="0:0:1"/>
-						<DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="defaultScreen" From="1.0" To="0.0" Duration="0:0:1" />
-					</Storyboard>
-				</VisualState>
-			</VisualStateGroup>
-		</VisualStateManager.VisualStateGroups>
-		
-		<Grid.RowDefinitions>
-			<RowDefinition Height="32"/>
-			<RowDefinition Height="*"/>
-			<RowDefinition Height="30"/>
-		</Grid.RowDefinitions>
+    <Controls:MetroWindow.RightWindowCommands>
+        <Controls:WindowCommands>
+            <Button Command="{Binding CmdSettings}" IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="15" Height="15">
+                        <Rectangle.Resources>
+                            <SolidColorBrush x:Key="BlackBrush" Color="White" />
+                        </Rectangle.Resources>
+                        <Rectangle.Fill>
+                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_settings}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <!--<TextBlock Margin="5,0,0,0" Text="settings" />-->
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding CmdSDP}" ToolTip="Download the Azure VM troubleshooting package (SDP)" >
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="10" Height="10">
+                        <Rectangle.Resources>
+                            <SolidColorBrush x:Key="BlackBrush" Color="White" />
+                        </Rectangle.Resources>
+                        <Rectangle.Fill>
+                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_download}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <!--<TextBlock Margin="5,0,0,0" Text="about" />-->
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding CmdAbout}">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="10" Height="10">
+                        <Rectangle.Resources>
+                            <SolidColorBrush x:Key="BlackBrush" Color="White" />
+                        </Rectangle.Resources>
+                        <Rectangle.Fill>
+                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_question}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <!--<TextBlock Margin="5,0,0,0" Text="about" />-->
+                </StackPanel>
+            </Button>
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
+
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo x:Name="mainTBII" ProgressState="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsWorking, Converter={StaticResource IsEnabledToProgressState}}" />
+    </Window.TaskbarItemInfo>
+
+    <Grid x:Name="mainGrid">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="DefaultLayout">
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="welcomeScreen" From="0.2" To="0.0" Duration="0:0:1"/>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="defaultScreen" From="0.0" To="1.0" Duration="0:0:1" />
+                    </Storyboard>
+                </VisualState>
+                <VisualState x:Name="WelcomeLayout">
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="welcomeScreen" From="0.0" To="0.2" Duration="0:0:1"/>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" Storyboard.TargetName="defaultScreen" From="1.0" To="0.0" Duration="0:0:1" />
+                    </Storyboard>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
 
 
-		<!-- TOP BAR -->
-		<Border BorderThickness="0,0,0,2" BorderBrush="Gainsboro">
-			<DockPanel Grid.Row="0">
-				<ComboBox ItemsSource="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.AzureSubscriptions}"
+        <!-- TOP BAR -->
+        <Border BorderThickness="0,0,0,0" BorderBrush="Gainsboro">
+            <DockPanel Grid.Row="0">
+                <ComboBox ItemsSource="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.AzureSubscriptions}"
                           IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}"
                           SelectedItem="{Binding Source={x:Static davm:App.GlobalConfig}, Path=CurrentSubscription, Mode=TwoWay}"
                           SelectionChanged="ComboBox_SelectionChanged_1"
 						  Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=IsWellConfigured, Converter={StaticResource BoolToVisibility}}"
                           Width="271"  Height="25" Margin="7,2,0,2"/>
-				<Button Margin="5,0,0,0" Content="Refresh" Command="{Binding CmdRefresh}" Height="25" Width="70" IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=IsWellConfigured, Converter={StaticResource BoolToVisibility}}"></Button>
-				<Button Margin="5,0,0,0" Content="Start All" Command="{Binding CmdStart}" Height="25" Width="70" IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=IsWellConfigured, Converter={StaticResource BoolToVisibility}}"></Button>
-				<Button Margin="5,0,0,0" Content="Stop All" Command="{Binding CmdStop}" Height="25" Width="70" IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=IsWellConfigured, Converter={StaticResource BoolToVisibility}}"></Button>
-				<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0">
-					<TextBlock >
+                <Button Margin="5,0,0,0" Content="Refresh" Command="{Binding CmdRefresh}" Height="25" Width="70" IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=IsWellConfigured, Converter={StaticResource BoolToVisibility}}"></Button>
+                <Button Margin="5,0,0,0" Content="Start All" Command="{Binding CmdStart}" Height="25" Width="70" IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=IsWellConfigured, Converter={StaticResource BoolToVisibility}}"></Button>
+                <Button Margin="5,0,0,0" Content="Stop All" Command="{Binding CmdStop}" Height="25" Width="70" IsEnabled="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle}" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=IsWellConfigured, Converter={StaticResource BoolToVisibility}}"></Button>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <TextBlock >
                        <Hyperlink RequestNavigate="HandleRequestNavigate" x:Name="hl1" NavigateUri="https://manage.windowsazure.com">
                              Azure Portal
                        </Hyperlink>
-					</TextBlock>
-					<TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0,0,0">
+                    </TextBlock>
+                    <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0,0,0">
                        <Hyperlink RequestNavigate="HandleRequestNavigate" x:Name="hl2" NavigateUri="https://portal.azure.com">
                              Azure Preview Portal
                        </Hyperlink>
-					</TextBlock>
-				</StackPanel>
+                    </TextBlock>
+                </StackPanel>
 
-			</DockPanel>
-		</Border>
+            </DockPanel>
+        </Border>
 
-		<Grid x:Name="welcomeScreen" Visibility="Visible" Grid.Row="1" Opacity="0.2">
-			<TextBlock FontSize="200" Foreground="Gainsboro" VerticalAlignment="Center" HorizontalAlignment="Center">DAVM</TextBlock>
-		</Grid>
+        <Grid x:Name="welcomeScreen" Visibility="Visible" Grid.Row="1" Opacity="0.2">
+            <TextBlock FontSize="200" Foreground="Gainsboro" VerticalAlignment="Center" HorizontalAlignment="Center">DAVM</TextBlock>
+        </Grid>
 
-		<Grid Grid.Row="1" x:Name="defaultScreen" Visibility="Visible" Opacity="0">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*" MinWidth="400"/>
-				<ColumnDefinition Width="Auto" MinWidth="480"/>
-			</Grid.ColumnDefinitions>
+        <Grid Grid.Row="1" x:Name="defaultScreen" Visibility="Visible" Opacity="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="400"/>
+                <ColumnDefinition Width="Auto" MinWidth="480"/>
+            </Grid.ColumnDefinitions>
 
-            <ListView SelectionMode="Single" Grid.Column="0" BorderThickness="0" x:Name="vmList" ItemsSource="{Binding Source={x:Static davm:App.GlobalConfig}, Path=CurrentSubscription.Resources}" >
+            <ListView SelectionMode="Single" Grid.Column="0" BorderThickness="0" x:Name="resourceLV" DataContext="{StaticResource AzureResources}" ItemsSource="{Binding IsAsync=False}" >
+                <ListView.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.ContainerStyle>
+                            <Style TargetType="{x:Type GroupItem}">
+                                <Setter Property="Margin" Value="0,0,0,5"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GroupItem}">
+                                            <Expander Background="Transparent" IsExpanded="True" Margin="4,0,0,0">
+                                                <Expander.Header>
+                                                    <TextBlock Text="{Binding Path=Name}"/>
+                                                </Expander.Header>
+                                                <Expander.Content>
+                                                    <ItemsPresenter />
+                                                </Expander.Content>
+                                            </Expander>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </GroupStyle.ContainerStyle>
+                    </GroupStyle>
+                </ListView.GroupStyle>
+                <!--<ListView.View>
+                    <GridView>
+                    </GridView>
+                </ListView.View>-->
+                <!--<ListView SelectionMode="Single" Grid.Column="0" BorderThickness="0" x:Name="resourceLV" ItemsSource="{Binding Source={x:Static davm:App.GlobalConfig}, Path=CurrentSubscription.Resources}" >-->
                 <ListView.ItemTemplate>
                     <DataTemplate >
-                        <davmControls:VMControl Resource="{Binding}"  />
+                        <davmControls:VMControl Resource="{Binding}" />
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
 
-            <davmControls:VMDetailControl Opacity="1" Grid.Column="1" VM="{Binding ElementName=vmList, Path=SelectedItem, Mode=OneWay}"></davmControls:VMDetailControl>
-			<GridSplitter ResizeDirection="Columns" Grid.Column="1" HorizontalAlignment="Left" BorderBrush="{StaticResource BlueAzure}" Grid.Row="0" Width="2" VerticalAlignment="Stretch" Margin="0" Visibility="{Binding ElementName=vmList, Path=SelectedItem, Mode=OneWay, Converter={StaticResource ExistToVisibility}}" />
-		</Grid>
+            <davmControls:VMDetailControl Opacity="1" Grid.Column="1" VM="{Binding ElementName=resourceLV, Path=SelectedItem, Mode=OneWay}"></davmControls:VMDetailControl>
+            <GridSplitter ResizeDirection="Columns" Grid.Column="1" HorizontalAlignment="Left" BorderBrush="{StaticResource BlueAzure}" Grid.Row="0" Width="2" VerticalAlignment="Stretch" Margin="0" Visibility="{Binding ElementName=vmList, Path=SelectedItem, Mode=OneWay, Converter={StaticResource ExistToVisibility}}" />
+        </Grid>
 
-		<!-- BOTTOM BAR -->
-		<StatusBar Grid.Row="2" Background="{StaticResource BlueAzure}">
-			<StatusBarItem>
-				<StackPanel Orientation="Horizontal">
-					<Button Margin="0"  VerticalAlignment="Center" Height="20" Command="{Binding CmdOpenLog}" FontSize="10" MinWidth="50" Padding="7,0,7,0">Log</Button>
-					<Separator />
-					<Rectangle Fill="Red" Opacity="0.7" Width="4" Margin="5,0,5,0" Height="13" Visibility="{Binding StatusMessage, Converter={StaticResource InfoMessageToVisibility}}">
-						<Rectangle.OpacityMask>
-							<VisualBrush Visual="{StaticResource appbar_exclamation}" Stretch="Fill" />
-						</Rectangle.OpacityMask>
-					</Rectangle>
-					<TextBlock VerticalAlignment="Center" Margin="2,0,0,0" FontSize ="10" Text="{Binding StatusMessage.Message}" />
-				</StackPanel>
-			</StatusBarItem>
-			<StatusBarItem HorizontalAlignment="Right">
-				<StackPanel Orientation="Horizontal">
-					<TextBlock Margin="0,0,10,0" FontSize ="10" VerticalAlignment="Center" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsWorking, Converter={StaticResource BoolToVisibility}}">Working</TextBlock>
-					<TextBlock Margin="0,0,10,0" FontSize ="10" VerticalAlignment="Center" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle, Converter={StaticResource BoolToVisibility}}">Ready</TextBlock>
-					<ProgressBar Grid.Column="1"  Foreground="{StaticResource BlueAzure}" HorizontalAlignment="Right" Width="60" Height="20" VerticalAlignment="Center" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsWorking, Converter={StaticResource BoolToVisibility}}" IsIndeterminate="True"/>
-				</StackPanel>
-			</StatusBarItem>
-		</StatusBar>
-	</Grid>
+        <!-- BOTTOM BAR -->
+        <!--<StatusBar Grid.Row="2" Background="{StaticResource BlueAzure}">-->
+        <StatusBar Grid.Row="2" Background="Transparent">
+        <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <Button Margin="0"  VerticalAlignment="Center" Height="20" Command="{Binding CmdOpenLog}" FontSize="10" MinWidth="50" Padding="7,0,7,0">Log</Button>
+                    <Separator />
+                    <Rectangle Fill="Red" Opacity="0.7" Width="4" Margin="5,0,5,0" Height="13" Visibility="{Binding StatusMessage, Converter={StaticResource InfoMessageToVisibility}}">
+                        <Rectangle.OpacityMask>
+                            <VisualBrush Visual="{StaticResource appbar_exclamation}" Stretch="Fill" />
+                        </Rectangle.OpacityMask>
+                    </Rectangle>
+                    <TextBlock VerticalAlignment="Center" Margin="4,0,0,0" FontSize ="10" Foreground="Black" Text="{Binding StatusMessage.Message}" />
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Margin="0,0,10,0" FontSize ="10" VerticalAlignment="Center" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsWorking, Converter={StaticResource BoolToVisibility}}">Working</TextBlock>
+                    <TextBlock Margin="0,0,10,0" FontSize ="10" VerticalAlignment="Center" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsIdle, Converter={StaticResource BoolToVisibility}}">Ready</TextBlock>
+                    <ProgressBar Grid.Column="1"  Foreground="{StaticResource BlueAzure}" HorizontalAlignment="Right" Width="60" Height="20" VerticalAlignment="Center" Visibility="{Binding Source={x:Static davm:App.GlobalConfig}, Path=VMController.IsWorking, Converter={StaticResource BoolToVisibility}}" IsIndeterminate="True"/>
+                </StackPanel>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
 
 
 </Controls:MetroWindow>

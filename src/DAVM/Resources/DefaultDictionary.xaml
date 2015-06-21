@@ -17,7 +17,6 @@
         <Setter Property="BorderThickness" Value="0" />
     </Style>
 
-
     <Style x:Key="ImportantText" TargetType="TextBlock" >
         <Setter Property="Foreground" Value="Black" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -31,6 +30,18 @@
         <Setter Property="FontSize" Value="14" />
     </Style>
     
+    <Style x:Key="BigTitle" TargetType="TextBlock" >
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="Margin" Value="5,0,0,0" />
+        <Setter Property="FontFamily" Value="Segoe UI Light" />
+    </Style>
+
+    <Style TargetType="{x:Type Window}">
+        <Setter Property="FontFamily" Value="Segoe UI Light" />
+    </Style>
+
     <Style TargetType="Button" x:Key="CmdButtonTransparent">
         <Setter Property="Template">
             <Setter.Value>
@@ -54,11 +65,10 @@
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
-            
         </Setter>
     </Style>
 
-	<Style TargetType="TextBox"  x:Key="SelectableText">
+	<Style TargetType="TextBox" x:Key="SelectableText">
 		<Setter Property="Height" Value="25" />
 		<Setter Property="IsReadOnly" Value="True" />		
 		<Setter Property="VerticalAlignment" Value="Center" />
@@ -94,6 +104,22 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    
+    <!-- EXPANDER -->
+    <DataTemplate x:Key="TitleHeader">
+        <Border BorderThickness="0,0,0,1" BorderBrush="Gainsboro" Margin="0,0,30,0">
+            <TextBlock Text="{Binding Text}" Style="{StaticResource ImportantText}"
+                        Margin="4 0"
+                        VerticalAlignment="Center"
+                        Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type Expander}}, Path=ActualWidth}" 
+                        TextWrapping="Wrap"/>
+        </Border>
+    </DataTemplate>
+
+    <Style TargetType="{x:Type Expander}">
+        <Setter Property="HeaderTemplate" Value="{StaticResource TitleHeader}"/>
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
     
 </ResourceDictionary>

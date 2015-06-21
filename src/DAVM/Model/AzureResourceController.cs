@@ -24,9 +24,9 @@ using Microsoft.WindowsAzure.WebSitesExtensions;
 namespace DAVM.Model
 {
 	/// <remarks>Singleton</remarks>
-	public class AzureVMController : AzureResource
+	public class AzureResourceController : BindableObject
 	{
-		private static volatile AzureVMController instance;
+		private static volatile AzureResourceController instance;
 		private static object syncRoot = new Object();
 
 		private static Timer _pollingTimer = new Timer(new TimerCallback(PollingStatus), null, 0, 15 * 1000);
@@ -39,7 +39,7 @@ namespace DAVM.Model
 		public event EventHandler WorkCompleted;
 
 
-		private AzureVMController(DirectoryInfo workingFolder)
+		private AzureResourceController(DirectoryInfo workingFolder)
 		{
 			ControllerInitialized = false;
 			IsWorking = false;
@@ -51,14 +51,14 @@ namespace DAVM.Model
 				Logger.LogEntry(LogType.Warning, "Working folder not exists: " + workingFolder.FullName);
 		}
 
-		public static AzureVMController GetInstance(DirectoryInfo workingDir)
+		public static AzureResourceController GetInstance(DirectoryInfo workingDir)
 		{
 			if (instance == null)
 			{
 				lock (syncRoot)
 				{
 					if (instance == null)
-						instance = new AzureVMController(workingDir);
+						instance = new AzureResourceController(workingDir);
 				}
 			}
 
@@ -82,8 +82,7 @@ namespace DAVM.Model
 
 		public bool ControllerInitialized;
 
-
-		public virtual ObservableCollection<AzureSubscription> AzureSubscriptions
+        public virtual ObservableCollection<AzureSubscription> AzureSubscriptions
 		{
 			get;
 			set;

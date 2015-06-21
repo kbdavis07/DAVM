@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace DAVM.Model
 {
-    public class AzureSubscription : AzureResource
+    public class AzureSubscription : BindableObject
     {
         public CertificateCloudCredentials CloudCredentials { get; private set; }
 
-        public AzureSubscription(AzureVMController controller, string subscriptionID, string base64Certificate, string name) {
+        public AzureSubscription(AzureResourceController controller, string subscriptionID, string base64Certificate, string name) {
 
             if (String.IsNullOrEmpty(subscriptionID) || String.IsNullOrEmpty(base64Certificate) || String.IsNullOrEmpty(name))
                 throw new ArgumentNullException();
@@ -34,7 +34,7 @@ namespace DAVM.Model
 
         private String Base64Certificate {  get; set; }
 
-        public  AzureVMController Controller { get; private set; }
+        public  AzureResourceController Controller { get; private set; }
 
         public virtual ObservableCollection<AzureResource> Resources
         {

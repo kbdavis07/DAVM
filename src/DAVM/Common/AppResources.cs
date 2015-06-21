@@ -2,6 +2,7 @@
 using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ using System.Windows;
 
 namespace DAVM.Common
 {
-    public class AppResources : AzureResource
+    public class AppResources : BindableObject
     {
         public FileInfo LogFileName { get; set; }
 
@@ -26,7 +27,7 @@ namespace DAVM.Common
 		private bool _isWellConfigured = false;
 		public bool IsWellConfigured { get { return _isWellConfigured; } set { _isWellConfigured = value; RaisePropertyChanged("IsWellConfigured"); } }
 
-        public AzureVMController VMController { get; set; }
+        public AzureResourceController VMController { get; set; }
 
 		#region Wiews
 		public MetroWindow MainWindow { get; set; }
@@ -34,6 +35,9 @@ namespace DAVM.Common
 		#endregion
 
 		private AzureSubscription _currentSubscription;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public AzureSubscription CurrentSubscription
         {
             get { return _currentSubscription; }

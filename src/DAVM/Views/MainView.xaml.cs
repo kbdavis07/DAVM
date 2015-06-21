@@ -1,10 +1,12 @@
 ﻿using DAVM.ViewModels;
 using GalaSoft.MvvmLight.Ioc;
+using MahApps.Metro;
 using MahApps.Metro.Controls;
 using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Shell;
 
@@ -18,7 +20,7 @@ namespace DAVM.Views
 		{
             InitializeComponent();
 
-			Model = SimpleIoc.Default.GetInstance<MainViewModel>();
+            Model = SimpleIoc.Default.GetInstance<MainViewModel>();
 
 			//show settings UI if not well configured
 			if (!App.GlobalConfig.IsWellConfigured)
@@ -30,7 +32,7 @@ namespace DAVM.Views
 				App.GlobalConfig.CurrentSubscription.Controller.WorkCompleted += Controller_WorkCompleted;
         }
 
-		private void Controller_WorkCompleted(object sender, EventArgs e)
+        private void Controller_WorkCompleted(object sender, EventArgs e)
 		{
 			Application.Current.Dispatcher.Invoke(() =>
 			{

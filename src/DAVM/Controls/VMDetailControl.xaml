@@ -42,7 +42,7 @@
         </VisualStateManager.VisualStateGroups>
         <Grid>
             <!-- Placeholder grid when nothing is selected  -->
-			<Grid x:Name="welcomeScreen" Visibility="Visible" Background="Gainsboro" Opacity="0.15">
+			<Grid x:Name="welcomeScreen" Visibility="Visible" Background="Transparent" Opacity="0.15">
 				<!--<Image Margin="0,0,0,0" Source="/Resources/vm_generic.png" Width="140" Height="140" Stretch="Fill" >
 					<Image.RenderTransform>
 						<ScaleTransform ScaleX="1" ScaleY="1" x:Name="welcomeImageTR" />
@@ -75,11 +75,13 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-				<Border Margin="-10,-5,0,0" CornerRadius="0" Background="{StaticResource BlueAzure}" BorderThickness="0" BorderBrush="Gainsboro" Grid.Row="0" Grid.Column="0"  Grid.ColumnSpan="2" >
+				<!--<Border Margin="-10,-5,0,0" CornerRadius="0" Background="{StaticResource BlueAzure}" BorderThickness="0" BorderBrush="Gainsboro" Grid.Row="0" Grid.Column="0"  Grid.ColumnSpan="2" >
 					<TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{Binding VM.Name, Converter={StaticResource StringToUpper}}" Foreground="White" FontSize="16" Margin="10,0,0,0" />
-				</Border>
+				</Border>-->
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{Binding VM.Name, Converter={StaticResource StringToUpper}}" Style="{StaticResource BigTitle}" />
 
-				<StackPanel  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"  >
+
+                <StackPanel  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"  >
 					<Image Margin="10" Source="/Resources/vm_generic.png" HorizontalAlignment="Left" Width="60" Height="60" Stretch="Fill"/>
 					<Button Margin="10" BorderThickness="0"  HorizontalAlignment="Left" Click="RemoteConnectionClick" IsEnabled="{Binding VM.SupportRemoteConnection}" Width="60" Height="60" Background="{StaticResource BlueAzure}" Visibility="{Binding VM.RemoteConnectionTypeToisibility, Converter={StaticResource BoolToVisibility}}" Cursor="Hand">
 						<TextBlock Text="{Binding VM.RemoteConnectionType}" Foreground="White" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" />

@@ -6,9 +6,15 @@ using System.Threading.Tasks;
 namespace DAVM.Model
 {
 
-    public abstract class AzureResource : INotifyPropertyChanged
+    public abstract class AzureResource : BindableObject
     {
         #region Properties
+
+        //for visual grouping
+        public abstract String AzureResourceType
+        {
+            get;
+        }
 
         public String _name;
         public String Name
@@ -91,50 +97,6 @@ namespace DAVM.Model
         {
             get;
             set;
-        }
-
-        private bool _isWorking = false;
-        public bool IsWorking
-        {
-            get { return _isWorking; }
-            set
-            {
-                if (value != _isWorking)
-                {
-                    _isWorking = value;
-					
-					RaisePropertyChanged("IsWorking");
-                    RaisePropertyChanged("IsIdle");
-                }
-            }
-        }
-
-        public bool IsIdle
-        {
-            get { return !_isWorking; }
-        }
-
-        private bool _isSelected;
-
-        public bool IsSelected
-        {
-            get { return _isSelected; }
-            set
-            {
-                if (value != _isSelected)
-                {
-                    _isSelected = value;
-
-                    RaisePropertyChanged("IsSelected");
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void RaisePropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-                PropertyChanged.BeginInvoke(this, new PropertyChangedEventArgs(propertyName), null, null);
         }
         #endregion
 

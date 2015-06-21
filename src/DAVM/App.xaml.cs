@@ -22,7 +22,13 @@ namespace DAVM
        
         protected override void OnStartup(StartupEventArgs e)
         {
-			GlobalConfig = new AppResources();
+            //to change the default font, works in combination with the style
+            FrameworkElement.StyleProperty.OverrideMetadata(typeof(Window), new FrameworkPropertyMetadata
+            {
+                DefaultValue = FindResource(typeof(Window))
+            });
+
+            GlobalConfig = new AppResources();
 
             GlobalConfig.AppDirectory = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\DAVM");
             if (!GlobalConfig.AppDirectory.Exists)
@@ -48,7 +54,7 @@ namespace DAVM
 
         private void InitApp()
         {
-            GlobalConfig.VMController = AzureVMController.GetInstance(App.GlobalConfig.AppDirectory);
+            GlobalConfig.VMController = AzureResourceController.GetInstance(App.GlobalConfig.AppDirectory);
             GlobalConfig.CurrentSubscription = null;
 
             if (!File.Exists(DAVM.Properties.Settings.Default.PublishSettingsFile))

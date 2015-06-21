@@ -23,9 +23,14 @@ namespace DAVM.Model
 			Status = ResourceStatus.Unknown;
         }
 
-		#region properties
-    
-		public String WebspaceName
+        #region properties
+
+        public override String AzureResourceType
+        {
+            get { return "App Web"; }
+        }
+
+        public String WebspaceName
         {
             get;
             set;

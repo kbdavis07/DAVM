@@ -28,9 +28,13 @@ namespace DAVM.Model
 			Status = ResourceStatus.Unknown;
         }
 
-		#region properties
-		
-		public String DeploymentID
+        #region properties
+        public override String AzureResourceType
+        {
+            get { return "Virtual Machine"; }
+        }
+
+        public String DeploymentID
 		{
 			get;
 			set;
