@@ -95,7 +95,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Border" Property="BorderBrush" Value="Transparent"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="White"/>
                         </Trigger>
                         <Trigger Property="IsFocused" Value="true">
                             <Setter TargetName="Border" Property="Background" Value="{StaticResource BlueAzure}" />

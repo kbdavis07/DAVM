@@ -113,13 +113,22 @@ namespace DAVM.Model
             await Controller.RetrieveAllAsync(this);
         }
 
-        public async void StartAll() {
-            await Controller.StartAllAsync(this);
+        public async void StartAllSelected() {
+
+            //start all selected Resources
+            var selected = App.GlobalConfig.CurrentSubscription.Resources.Where((r) => r.IsSelected);
+            if (selected != null || selected.Count() == 0)
+                await Controller.StartAllAsync(selected);
+
         }
         
-        public async void StopAll()
+        public async void StopAllSelected()
         {
-            await Controller.StopAllAsync(this);
+            //start all selected Resources
+            var selected = App.GlobalConfig.CurrentSubscription.Resources.Where((r) => r.IsSelected);
+            if (selected != null || selected.Count() == 0)
+                await Controller.StopAllAsync(selected);
+
         }
 
     }

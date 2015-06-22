@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,15 +8,8 @@ using System.Threading.Tasks;
 
 namespace DAVM.Model
 {
-    public abstract class BindableObject : INotifyPropertyChanged
+    public abstract class BindableObject : ObservableObject
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void RaisePropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-                PropertyChanged.BeginInvoke(this, new PropertyChangedEventArgs(propertyName), null, null);
-        }
-
         private bool _isWorking = false;
         public bool IsWorking
         {
@@ -25,7 +19,6 @@ namespace DAVM.Model
                 if (value != _isWorking)
                 {
                     _isWorking = value;
-
                     RaisePropertyChanged("IsWorking");
                     RaisePropertyChanged("IsIdle");
                 }

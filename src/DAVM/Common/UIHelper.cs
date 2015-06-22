@@ -159,7 +159,48 @@ namespace DAVM.Common
 		}
 	}
 
-	public class IPAddressToStringConverter : IValueConverter
+    public class AzureResourceToDetailPanelVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+            object parameter, CultureInfo culture)
+        {
+            if(String.IsNullOrEmpty(""+parameter))
+                return Visibility.Visible;
+
+            switch (("" + parameter).ToUpperInvariant())
+            {
+                case "VM": {
+                        var vm = value as AzureVM;
+                        if (vm != null)
+                        {
+                            return Visibility.Visible;
+                        }
+                        break;
+                    }
+                case "WEBSITE":
+                    {
+                        var website = value as AzureWebSite;
+                        if (website != null)
+                        {
+                            return Visibility.Visible;
+                        }
+                        break;
+                    }
+                default: { return Visibility.Collapsed; }
+            }
+            
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType,
+            object parameter, CultureInfo culture)
+        {
+            // Do the conversion from visibility to bool
+            return value;
+        }
+    }
+
+    public class IPAddressToStringConverter : IValueConverter
 	{
 		public object Convert(object value, Type targetType,
 			object parameter, CultureInfo culture)
@@ -296,7 +337,7 @@ namespace DAVM.Common
 		}
 	}
 
-	public class RemoteConnectionTypeToisibilityConverter : IValueConverter
+	public class RemoteConnectionTypeToVisibilityConverter : IValueConverter
 	{
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
@@ -373,7 +414,7 @@ namespace DAVM.Common
 				return new ValidationResult(false, errorMessage);
 
 			//if exist then check if valid PUBLISH file
-			result = App.GlobalConfig.VMController.InitializeController(new FileInfo(insertedValue));
+			result = App.GlobalConfig.Controller.InitializeController(new FileInfo(insertedValue));
             return result ? ValidationResult.ValidResult : new ValidationResult(false, "Invalid Azure subcription file");
 		}
 

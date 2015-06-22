@@ -39,12 +39,11 @@ namespace DAVM.Views
 				if (App.GlobalConfig.CurrentSubscription == null)
 					return;
 
-				if (App.GlobalConfig.CurrentSubscription.VMs.Count > 0)
+                //display the right layout, when ready
+				if (App.GlobalConfig.CurrentSubscription.Resources.Count > 0)
 				{
-					var g = VisualStateManager.GetVisualStateGroups(mainGrid);
-					Debug.WriteLine(g[0]);
-					VisualStateGroup g1 = (VisualStateGroup)g[0];
-					Console.WriteLine(g1.States.Count);
+					var g = VisualStateManager.GetVisualStateGroups(mainGrid);					
+					VisualStateGroup g1 = (VisualStateGroup)g[0];					
 					VisualStateManager.GoToElementState(mainGrid, "DefaultLayout", true);
 				}
 				else
@@ -54,7 +53,7 @@ namespace DAVM.Views
 
 		private void ComboBox_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
         {
-            if (App.GlobalConfig.CurrentSubscription != null && !App.GlobalConfig.VMController.IsWorking)
+            if (App.GlobalConfig.CurrentSubscription != null && !App.GlobalConfig.Controller.IsWorking)
             {
                 //automatic refresh if the elapsed time is greater than 1 hour 
                 var timeDifference = (DateTime.Now - App.GlobalConfig.CurrentSubscription.LastUpdate);

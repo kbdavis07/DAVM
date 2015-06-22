@@ -9,6 +9,7 @@ namespace DAVM.Model
     public abstract class AzureResource : BindableObject
     {
         #region Properties
+        public abstract String ID { get;}
 
         //for visual grouping
         public abstract String AzureResourceType
@@ -108,6 +109,24 @@ namespace DAVM.Model
 
         #region Methods
 
+
+        /// <summary>
+        /// Two instance are equal only if the ID is the same
+        /// </summary>
+        /// <param name="obj"></param>
+        public override bool Equals(object obj)
+        {
+            AzureResource target = obj as AzureResource;
+            if (target != null)
+                return target.ID == this.ID;
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public virtual string GetVerboseDetails()
         {
             return String.Empty;
@@ -152,6 +171,8 @@ namespace DAVM.Model
             //    IsWorking = false;
             //}
         }
+
+        
 
         #endregion
     }

@@ -29,6 +29,8 @@ namespace DAVM.Model
         }
 
         #region properties
+        public override String ID { get { return this.DeploymentName + "_" + this.Name; } }
+
         public override String AzureResourceType
         {
             get { return "Virtual Machine"; }
@@ -191,25 +193,6 @@ namespace DAVM.Model
 			sb.AppendLine(String.Format("Subscription ID: {0}", Subscription.ID));
 			return sb.ToString();
 		}
-
-        /// <summary>
-        /// Two VM are equal if the service name and the hostname are the same
-        /// </summary>
-        /// <param name="obj"></param>
-        public override bool Equals(object obj)
-        {
-            AzureVM target = obj as AzureVM;
-            if (target != null)
-                return target.Name == this.Name && target.ServiceName == this.ServiceName;
-
-            return false;
-        }
-
-		public override int GetHashCode()
-		{
-			return base.GetHashCode();
-		}
-
 		#endregion
 	}
 

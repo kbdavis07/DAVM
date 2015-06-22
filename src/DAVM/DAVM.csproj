@@ -237,6 +237,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\WebSiteDetailControl.xaml.cs">
+      <DependentUpon>WebSiteDetailControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\VMStatusControl.xaml.cs">
       <DependentUpon>VMStatusControl.xaml</DependentUpon>
     </Compile>
@@ -266,6 +269,10 @@
     <Compile Include="Controls\VMDetailControl.xaml.cs">
       <DependentUpon>VMDetailControl.xaml</DependentUpon>
     </Compile>
+    <Page Include="Controls\WebSiteDetailControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\VMStatusControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -419,6 +426,9 @@
   <ItemGroup>
     <Resource Include="Resources\vm_linux.png" />
     <Resource Include="Resources\vm_windows.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\windows-azure-web-site.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />

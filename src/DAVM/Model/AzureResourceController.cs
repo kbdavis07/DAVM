@@ -1,80 +1,45 @@
-﻿using Microsoft.WindowsAzure;
-using Microsoft.WindowsAzure.Management.WebSites.Models;
-using Microsoft.WindowsAzure.Management.WebSites;
+﻿using DAVM.Common;
+using GalaSoft.MvvmLight;
+using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Management.Compute;
 using Microsoft.WindowsAzure.Management.Compute.Models;
+using Microsoft.WindowsAzure.Management.WebSites;
+using Microsoft.WindowsAzure.Management.WebSites.Models;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Management.Automation;
-using System.Management.Automation.Runspaces;
+using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
-using System.Linq;
-using System.Windows.Shell;
-using DAVM.Common;
-using System.Collections.Generic;
-using Microsoft.WindowsAzure.WebSitesExtensions;
 
 namespace DAVM.Model
 {
-	/// <remarks>Singleton</remarks>
-	public class AzureResourceController : BindableObject
+    /// <remarks>Singleton</remarks>
+    public class AzureResourceController : BindableObject
 	{
-		private static volatile AzureResourceController instance;
-		private static object syncRoot = new Object();
+		private static volatile AzureResourceController _instance;
+		private static object _syncRoot = new Object();
 
 		private static Timer _pollingTimer = new Timer(new TimerCallback(PollingStatus), null, 0, 15 * 1000);
 		private static HashSet<AzureVM> _VMToRefresh = new HashSet<AzureVM>();
         private static HashSet<AzureWebSite> _WebsiteToRefresh = new HashSet<AzureWebSite>();
-        private DirectoryInfo WorkingFolder { get; set; }
-
+     
 		//events used to notify the UI/ViewModels that the controller is busy or not
 		public event EventHandler WorkStarted;
 		public event EventHandler WorkCompleted;
 
+        #region Properties
+        private DirectoryInfo WorkingFolder { get; set; }
 
-		private AzureResourceController(DirectoryInfo workingFolder)
-		{
-			ControllerInitialized = false;
-			IsWorking = false;
-			AzureSubscriptions = new ObservableCollection<AzureSubscription>();
-
-			if (workingFolder.Exists)
-				WorkingFolder = workingFolder;
-			else
-				Logger.LogEntry(LogType.Warning, "Working folder not exists: " + workingFolder.FullName);
-		}
-
-		public static AzureResourceController GetInstance(DirectoryInfo workingDir)
-		{
-			if (instance == null)
-			{
-				lock (syncRoot)
-				{
-					if (instance == null)
-						instance = new AzureResourceController(workingDir);
-				}
-			}
-
-			return instance;
-		}
-
-        public async Task RetrieveAllAsync(AzureSubscription subscription) {
-            RetrieveVMsAsync(subscription);
-            RetrieveWebsitesAsync(subscription);
-        }
-
-		#region Properties
-		/// <summary>
-		/// File generated from Get-AzurePublishSettingsFile, contains a management certificate and all subscriptions
-		/// </summary>   
-		public FileInfo PublishSettingsFile
+        /// <summary>
+        /// File generated from Get-AzurePublishSettingsFile, contains a management certificate and all subscriptions
+        /// </summary>   
+        public FileInfo PublishSettingsFile
 		{
 			get;
 			private set;
@@ -93,60 +58,60 @@ namespace DAVM.Model
         #region Events
         private void RaiseCompletedEvent()
 		{
-			IsWorking = false;
+            IsWorking = false;
 			if (WorkCompleted != null)
 				foreach(var m in WorkCompleted.GetInvocationList())
 						m.DynamicInvoke(this,null);
-		}
 
-		private void RaiseStartedEvent()
+        }
+
+        private void RaiseStartedEvent()
 		{
 			IsWorking = true;
 			if (WorkStarted != null)
 				foreach (var m in WorkCompleted.GetInvocationList())
 					m.DynamicInvoke(this, null);
-		}
+        }
 
-		public async Task StartAllAsync(AzureSubscription subscription)
+		public async Task StartAllAsync(IEnumerable<AzureResource> resources)
 		{
 			await Task.Factory.StartNew(() =>
 			{
-
-				Logger.LogEntry(LogType.Info, "Starting all VMs");
+                Logger.LogEntry(LogType.Info, "Starting "+resources.Count()+" resources");
 
 				//barrier used to disabled UI until we are working
-				Barrier stopWorkingBarrier = new Barrier(subscription.VMs.Count, null);
+				Barrier startingWorkingBarrier = new Barrier(resources.Count(), null);
 				RaiseStartedEvent();
-				Parallel.ForEach<AzureVM>(subscription.VMs, vm =>
+				Parallel.ForEach<AzureResource>(resources, vm =>
 				{
 					vm.StartAsync().Wait();
-					stopWorkingBarrier.SignalAndWait();
+                    startingWorkingBarrier.SignalAndWait();
 				});
 				RaiseCompletedEvent();
-				Logger.LogEntry(LogType.Info, "VMs started successfully");
+				//Logger.LogEntry(LogType.Info, "Resources started successfully");
 
 			});
 		}
 
-		public async Task StopAllAsync(AzureSubscription subscription)
+		public async Task StopAllAsync(IEnumerable<AzureResource> resources)
 		{
 
 			await Task.Factory.StartNew(() =>
 			{
+                Logger.LogEntry(LogType.Info, "Stopping"+resources.Count()+" resources");
 
-				Logger.LogEntry(LogType.Info, "Stopping all VMs");
 				RaiseStartedEvent();
 
 				//barrier used to disabled UI until we are working
-				Barrier stopWorkingBarrier = new Barrier(subscription.VMs.Count, null);
+				Barrier stopWorkingBarrier = new Barrier(resources.Count(), null);
 			
-				Parallel.ForEach<AzureVM>(subscription.VMs, vm =>
+				Parallel.ForEach<AzureResource>(resources, vm =>
 			    {
 				   vm.StopAsync().Wait();
 				   stopWorkingBarrier.SignalAndWait();
 			    });
 				RaiseCompletedEvent();
-				Logger.LogEntry(LogType.Info, "VMs stopped successfully");
+				//Logger.LogEntry(LogType.Info, "Resources stopped successfully");
 
 			});
 
@@ -551,8 +516,6 @@ namespace DAVM.Model
             Logger.LogEntry(LogType.Info, String.Format("Downloading Websites for \"{0}\"", subscription.Name));
             RaiseStartedEvent();
 
-
-
             await Task.Factory.StartNew(() =>
             {
                 try
@@ -743,7 +706,41 @@ namespace DAVM.Model
 
 #endif
         }
-#endregion
+        #endregion
+
+        #region Methods
+
+        private AzureResourceController(DirectoryInfo workingFolder)
+        {
+            ControllerInitialized = false;
+            IsWorking = false;
+            AzureSubscriptions = new ObservableCollection<AzureSubscription>();
+
+            if (workingFolder.Exists)
+                WorkingFolder = workingFolder;
+            else
+                Logger.LogEntry(LogType.Warning, "Working folder not exists: " + workingFolder.FullName);
+        }
+
+        public static AzureResourceController GetInstance(DirectoryInfo workingDir)
+        {
+            if (_instance == null)
+            {
+                lock (_syncRoot)
+                {
+                    if (_instance == null)
+                        _instance = new AzureResourceController(workingDir);
+                }
+            }
+
+            return _instance;
+        }
+
+        public async Task RetrieveAllAsync(AzureSubscription subscription)
+        {
+            RetrieveVMsAsync(subscription);
+            RetrieveWebsitesAsync(subscription);
+        }
 
         private static DeploymentGetResponse GetAzureDeyployment(ComputeManagementClient client, string serviceName, DeploymentSlot slot)
 		{
@@ -857,7 +854,6 @@ namespace DAVM.Model
         /// <param name="vm"></param>
         public static void PollingStatus(object state)
         {
-
             if (_WebsiteToRefresh.Count > 0)
             {
                 try
@@ -940,7 +936,7 @@ namespace DAVM.Model
 
             }
         }
-
+        #endregion
 
     }
 }

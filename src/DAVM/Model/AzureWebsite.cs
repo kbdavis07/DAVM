@@ -25,6 +25,9 @@ namespace DAVM.Model
 
         #region properties
 
+        public override String ID { get { return this.WebspaceName +"_"+ this.Name; } }
+
+
         public override String AzureResourceType
         {
             get { return "App Web"; }
@@ -94,25 +97,6 @@ namespace DAVM.Model
             sb.AppendLine(String.Format("Plan: {0}", Plan));
             sb.AppendLine(String.Format("Subscription ID: {0}", Subscription.ID));
 			return sb.ToString();
-		}
-
-	
-        /// <summary>
-        /// Two Website are equal if the name and the webspace name are the same
-        /// </summary>
-        /// <param name="obj"></param>
-        public override bool Equals(object obj)
-        {
-            AzureWebSite target = obj as AzureWebSite;
-            if (target != null)
-                return target.Name == this.Name && target.WebspaceName == this.WebspaceName;
-
-            return false;
-        }
-
-		public override int GetHashCode()
-		{
-			return base.GetHashCode();
 		}
 
 		#endregion

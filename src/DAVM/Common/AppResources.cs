@@ -1,4 +1,5 @@
 ﻿using DAVM.Model;
+using GalaSoft.MvvmLight;
 using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.Windows;
 
 namespace DAVM.Common
 {
-    public class AppResources : BindableObject
+    public class AppResources : ObservableObject
     {
         public FileInfo LogFileName { get; set; }
 
@@ -25,19 +26,13 @@ namespace DAVM.Common
 		#endregion
 
 		private bool _isWellConfigured = false;
-		public bool IsWellConfigured { get { return _isWellConfigured; } set { _isWellConfigured = value; RaisePropertyChanged("IsWellConfigured"); } }
+		public bool IsWellConfigured {
+            get {
+                return _isWellConfigured; } set {
+                _isWellConfigured = value;
+                RaisePropertyChanged("IsWellConfigured"); } }
 
-        public AzureResourceController VMController { get; set; }
-
-		#region Wiews
-		public MetroWindow MainWindow { get; set; }
-		public MetroWindow SettingsWindow { get; set; }
-		#endregion
-
-		private AzureSubscription _currentSubscription;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
+        private AzureSubscription _currentSubscription;
         public AzureSubscription CurrentSubscription
         {
             get { return _currentSubscription; }
@@ -50,7 +45,15 @@ namespace DAVM.Common
                 }
             }
         }
-
         public DirectoryInfo AppDirectory { get; set; }
+
+        public AzureResourceController Controller { get; set; }
+
+		#region Views
+		public MetroWindow MainWindow { get; set; }
+		public MetroWindow SettingsWindow { get; set; }
+		#endregion
+
+
     }
 }
