@@ -35,13 +35,6 @@ namespace DAVM.Controls
 			set { SetValue(VMProperty, value);}
 		}
 
-		private void CopyDetails_Click(object sender, RoutedEventArgs e)
-		{
-			if (VM != null)
-			{
-				Clipboard.SetText(VM.GetVerboseDetails());
-			}
-		}
 		private void RemoteConnectionClick(object sender, RoutedEventArgs e)
 		{
 			UIHelper.LaunchRemoteConnection(VM);

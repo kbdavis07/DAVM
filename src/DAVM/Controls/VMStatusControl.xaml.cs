@@ -26,10 +26,10 @@ namespace DAVM.Controls
 			InitializeComponent();
 		}
 
-		public static readonly DependencyProperty VMStatusProperty = DependencyProperty.Register("Status", typeof(VMStatus), typeof(VMStatusControl));
-		public VMStatus Status
+		public static readonly DependencyProperty VMStatusProperty = DependencyProperty.Register("Status", typeof(ResourceStatus), typeof(VMStatusControl));
+		public ResourceStatus Status
 		{
-			get { return (VMStatus)GetValue(VMStatusProperty); }
+			get { return (ResourceStatus)GetValue(VMStatusProperty); }
 			set { SetValue(VMStatusProperty, value); }
 		}
 	}

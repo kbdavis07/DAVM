@@ -18,11 +18,20 @@ namespace DAVM
     /// </summary>
     public partial class App : Application
     {
-        public static AppResources GlobalConfig { get; private set; }
+        public static AppResources GlobalConfig {
+            get;
+            private set;
+        }
        
         protected override void OnStartup(StartupEventArgs e)
         {
-			GlobalConfig = new AppResources();
+            //to change the default font, works in combination with the style
+            FrameworkElement.StyleProperty.OverrideMetadata(typeof(Window), new FrameworkPropertyMetadata
+            {
+                DefaultValue = FindResource(typeof(Window))
+            });
+
+            GlobalConfig = new AppResources();
 
             GlobalConfig.AppDirectory = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\DAVM");
             if (!GlobalConfig.AppDirectory.Exists)
@@ -48,7 +57,7 @@ namespace DAVM
 
         private void InitApp()
         {
-            GlobalConfig.VMController = AzureVMController.GetInstance(App.GlobalConfig.AppDirectory);
+            GlobalConfig.Controller = AzureResourceController.GetInstance(App.GlobalConfig.AppDirectory);
             GlobalConfig.CurrentSubscription = null;
 
             if (!File.Exists(DAVM.Properties.Settings.Default.PublishSettingsFile))
@@ -59,9 +68,9 @@ namespace DAVM
             else
             {
                 var publishSettingsFile = new FileInfo(DAVM.Properties.Settings.Default.PublishSettingsFile);
-                GlobalConfig.IsWellConfigured = GlobalConfig.VMController.InitializeController(publishSettingsFile);
-                if (GlobalConfig.IsWellConfigured && GlobalConfig.VMController.AzureSubscriptions.Count > 0)
-                    GlobalConfig.CurrentSubscription = GlobalConfig.VMController.AzureSubscriptions[0]; //always select the first
+                GlobalConfig.IsWellConfigured = GlobalConfig.Controller.InitializeController(publishSettingsFile);
+                if (GlobalConfig.IsWellConfigured && GlobalConfig.Controller.AzureSubscriptions.Count > 0)
+                    GlobalConfig.CurrentSubscription = GlobalConfig.Controller.AzureSubscriptions[0]; //always select the first
 
             }
 

@@ -31,39 +31,58 @@ namespace DAVM.Common
 			Mouse.OverrideCursor = currentCur;
 		}
 
-		public static void LaunchRemoteConnection(AzureVM vm)
+		public static void LaunchRemoteConnection(AzureResource resource)
 		{
-			try
-			{
-				if (vm.RemoteConnectionType == RemoteConnectionType.RDP)
-				{
-					Process mstsc = new Process();
-					mstsc.StartInfo.FileName = "mstsc.exe";
-					mstsc.StartInfo.Arguments = String.Format("/v:{0}:{1}", vm.FQDN, vm.RemoteConnectionPort);
-					mstsc.Start();
-				}
-				else
-				{
-					if (App.GlobalConfig.SSHClientPath == null || !App.GlobalConfig.SSHClientPath.Exists || String.IsNullOrEmpty(App.GlobalConfig.SSHClientCmdLine))
-					{
-						UIHelper.NotifyUser("Could not start your SSH client, please check the configuration", false,App.GlobalConfig.MainWindow,true);
-						return;
-					}
+            try
+            {
+                if (resource.GetType().BaseType == typeof(AzureVM))
+                {
+                    //remote connection only for VM instances
+                    var vm = resource as AzureVM;
 
-					Process mstsc = new Process();
-					mstsc.StartInfo.FileName = App.GlobalConfig.SSHClientPath.FullName;
-					App.GlobalConfig.SSHClientCmdLine = App.GlobalConfig.SSHClientCmdLine.Replace(AppResources.PH_FQDN, vm.FQDN);
-					App.GlobalConfig.SSHClientCmdLine = App.GlobalConfig.SSHClientCmdLine.Replace(AppResources.PH_PORT, "" + vm.RemoteConnectionPort);
-					mstsc.StartInfo.Arguments = App.GlobalConfig.SSHClientCmdLine;
-					mstsc.Start();
-				}
-			}
-			catch (Exception ex)
-			{
-				Logger.LogEntry("Could not launch the remote connection", ex);
-				UIHelper.NotifyUser("Could not start the remote connection: " + ex.Message, false, App.GlobalConfig.MainWindow, true);
+                    if (!vm.SupportRemoteConnection)
+                    {
+                        UIHelper.NotifyUser("Not available!", false, App.GlobalConfig.MainWindow, false);
+                        return;
+                    }
 
-			}
+                    if (vm.RemoteConnectionType == RemoteConnectionType.RDP)
+                    {
+                        Process mstsc = new Process();
+                        mstsc.StartInfo.FileName = "mstsc.exe";
+                        mstsc.StartInfo.Arguments = String.Format("/v:{0}:{1}", vm.FQDN, vm.RemoteConnectionPort);
+                        mstsc.Start();
+                    }
+                    else
+                    {
+                        if (App.GlobalConfig.SSHClientPath == null || !App.GlobalConfig.SSHClientPath.Exists || String.IsNullOrEmpty(App.GlobalConfig.SSHClientCmdLine))
+                        {
+                            UIHelper.NotifyUser("Could not start your SSH client, please check the configuration", false, App.GlobalConfig.MainWindow, true);
+                            return;
+                        }
+
+                        Process mstsc = new Process();
+                        mstsc.StartInfo.FileName = App.GlobalConfig.SSHClientPath.FullName;
+                        App.GlobalConfig.SSHClientCmdLine = App.GlobalConfig.SSHClientCmdLine.Replace(AppResources.PH_FQDN, vm.FQDN);
+                        App.GlobalConfig.SSHClientCmdLine = App.GlobalConfig.SSHClientCmdLine.Replace(AppResources.PH_PORT, "" + vm.RemoteConnectionPort);
+                        mstsc.StartInfo.Arguments = App.GlobalConfig.SSHClientCmdLine;
+                        mstsc.Start();
+                    }
+                }
+
+                if (resource.GetType() == typeof(AzureWebSite))
+                {
+                    var web = resource as AzureWebSite;
+                    if (!String.IsNullOrEmpty(web.FQDNs.First()))
+                        Process.Start("http://" + web.FQDNs.First());
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogEntry("Could not launch the remote connection", ex);
+                UIHelper.NotifyUser("Could not connect: " + ex.Message, false, App.GlobalConfig.MainWindow, true);
+
+            }
 		}
 
 		/// <summary>
@@ -81,7 +100,7 @@ namespace DAVM.Common
 				jumpList.JumpItems.Add(new JumpTask());
 
 				//the jump list will contains a maximum of 5 VMs - selecting only the ones that are running on the last refresh
-				foreach (AzureVM vm in App.GlobalConfig.CurrentSubscription.VMs.Where((v) => v.Status == VMStatus.Running).Take(5))
+				foreach (AzureVM vm in App.GlobalConfig.CurrentSubscription.VMs.Where((v) => v.Status == ResourceStatus.Running).Take(5))
 				{
 					JumpTask t = new JumpTask();
 					if (vm.RemoteConnectionType == RemoteConnectionType.RDP)
@@ -127,19 +146,19 @@ namespace DAVM.Common
 		public object Convert(object value, Type targetType,
 			object parameter, CultureInfo culture)
 		{
-			VMStatus status = (VMStatus)value;
+			ResourceStatus status = (ResourceStatus)value;
 
 			switch (status)
 			{
-				case VMStatus.Running:
+				case ResourceStatus.Running:
 					return "VM started";
-				case VMStatus.Deallocated:
+				case ResourceStatus.Deallocated:
 					return "VM Stopped and deallocated (NOT counting for billing)";
-				case VMStatus.Off:
+				case ResourceStatus.Off:
 					return "Guest OS Stopped or not responding (COUNTS for billing)";
-				case VMStatus.Error:
+				case ResourceStatus.Error:
 					return "Error occured, check the log file";
-				case VMStatus.Updating:
+				case ResourceStatus.Updating:
 					return "Refreshing status, Azure is working on it";
 			}
 
@@ -154,7 +173,48 @@ namespace DAVM.Common
 		}
 	}
 
-	public class IPAddressToStringConverter : IValueConverter
+    public class AzureResourceToDetailPanelVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+            object parameter, CultureInfo culture)
+        {
+            if(String.IsNullOrEmpty(""+parameter))
+                return Visibility.Visible;
+
+            switch (("" + parameter).ToUpperInvariant())
+            {
+                case "VM": {
+                        var vm = value as AzureVM;
+                        if (vm != null)
+                        {
+                            return Visibility.Visible;
+                        }
+                        break;
+                    }
+                case "WEBSITE":
+                    {
+                        var website = value as AzureWebSite;
+                        if (website != null)
+                        {
+                            return Visibility.Visible;
+                        }
+                        break;
+                    }
+                default: { return Visibility.Collapsed; }
+            }
+            
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType,
+            object parameter, CultureInfo culture)
+        {
+            // Do the conversion from visibility to bool
+            return value;
+        }
+    }
+
+    public class IPAddressToStringConverter : IValueConverter
 	{
 		public object Convert(object value, Type targetType,
 			object parameter, CultureInfo culture)
@@ -181,19 +241,19 @@ namespace DAVM.Common
 		public object Convert(object value, Type targetType,
 			object parameter, CultureInfo culture)
 		{
-			VMStatus status = (VMStatus)value;
+			ResourceStatus status = (ResourceStatus)value;
 
 			switch (status)
 			{
-				case VMStatus.Running:
+				case ResourceStatus.Running:
 					return new SolidColorBrush(Colors.Green);
-				case VMStatus.Off:
+				case ResourceStatus.Off:
 					return new SolidColorBrush(Colors.Gray);
-				case VMStatus.Deallocated:
+				case ResourceStatus.Deallocated:
 					return new SolidColorBrush(Colors.Black);
-				case VMStatus.Error:
+				case ResourceStatus.Error:
 					return new SolidColorBrush(Colors.Red);
-				case VMStatus.Unknown:
+				case ResourceStatus.Unknown:
 					return new SolidColorBrush(Colors.LightGray);
 				default:
 					return new SolidColorBrush(Colors.Orange);
@@ -291,7 +351,7 @@ namespace DAVM.Common
 		}
 	}
 
-	public class RemoteConnectionTypeToisibilityConverter : IValueConverter
+	public class RemoteConnectionTypeToVisibilityConverter : IValueConverter
 	{
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
@@ -368,7 +428,7 @@ namespace DAVM.Common
 				return new ValidationResult(false, errorMessage);
 
 			//if exist then check if valid PUBLISH file
-			result = App.GlobalConfig.VMController.InitializeController(new FileInfo(insertedValue));
+			result = App.GlobalConfig.Controller.InitializeController(new FileInfo(insertedValue));
             return result ? ValidationResult.ValidResult : new ValidationResult(false, "Invalid Azure subcription file");
 		}
 

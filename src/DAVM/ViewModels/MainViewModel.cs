@@ -53,17 +53,17 @@ namespace DAVM.ViewModels
 
 		public void StartAll()
         {
-            App.GlobalConfig.CurrentSubscription.StartAll();
+            App.GlobalConfig.CurrentSubscription.StartAllSelected();
         }
 
         public void StopAll()
         {
-            App.GlobalConfig.CurrentSubscription.StopAll();
+            App.GlobalConfig.CurrentSubscription.StopAllSelected();
         }
 
         public void RefreshAll()
         {
-			App.GlobalConfig.CurrentSubscription.RetrieveVMs();
+			App.GlobalConfig.CurrentSubscription.RetrieveAllAsync();
         }
 
 		#region Commands

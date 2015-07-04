@@ -164,12 +164,12 @@ namespace DAVM.ViewModels
 				try
 				{
 					FileInfo newSettingsFile = new FileInfo(Properties.Settings.Default.PublishSettingsFile);
-					var initResult = App.GlobalConfig.VMController.InitializeController(newSettingsFile);
+					var initResult = App.GlobalConfig.Controller.InitializeController(newSettingsFile);
 					if (initResult)
 					{
-						if (App.GlobalConfig.VMController.AzureSubscriptions.Count > 0)
+						if (App.GlobalConfig.Controller.AzureSubscriptions.Count > 0)
 						{
-							App.GlobalConfig.CurrentSubscription = App.GlobalConfig.VMController.AzureSubscriptions[0];	//always select the first
+							App.GlobalConfig.CurrentSubscription = App.GlobalConfig.Controller.AzureSubscriptions[0];	//always select the first
 																														//App.GlobalConfig.CurrentSubscription.RetrieveVMs();
 						}
 
@@ -205,7 +205,7 @@ namespace DAVM.ViewModels
            // if (NotifyUser != null)
                 UIHelper.NotifyUser("I'm going to download the publish settings file (.publishsettings) needed to manage the VMs. The file contains all the information required and a management certificate. Check your browser, authorize the download and copy the file in a secure location. Once downloaded you must set the path of the file in this settings page.", false, App.GlobalConfig.SettingsWindow);
 
-            App.GlobalConfig.VMController.DownloadPublishSettings();
+            App.GlobalConfig.Controller.DownloadPublishSettings();
         }
 
 		private void DoCmdSelectSSHClient()

@@ -2,7 +2,9 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <SolidColorBrush x:Key="BlueAzure" Color="#00adef" />
-                     
+    <SolidColorBrush x:Key="White" Color="white" />
+
+
     <Style x:Key="VMName" TargetType="TextBlock" >
         <Setter Property="FontSize" Value="14 " />
         <Setter Property="FontStyle" Value="Normal" />
@@ -12,11 +14,11 @@
     </Style>
 
     <Style TargetType="ToolTip" >
-        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="Foreground" Value="White" />
         <Setter Property="Background" Value="{StaticResource BlueAzure}" />
         <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="{StaticResource White}" />
     </Style>
-
 
     <Style x:Key="ImportantText" TargetType="TextBlock" >
         <Setter Property="Foreground" Value="Black" />
@@ -31,18 +33,33 @@
         <Setter Property="FontSize" Value="14" />
     </Style>
     
+    <Style x:Key="BigTitle" TargetType="TextBlock" >
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="Margin" Value="5,0,0,0" />
+        <Setter Property="FontFamily" Value="Segoe UI Light" />
+    </Style>
+
+    <Style TargetType="{x:Type Window}">
+        <Setter Property="FontFamily" Value="Segoe UI Light" />
+    </Style>
+
     <Style TargetType="Button" x:Key="CmdButtonTransparent">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                 
                     <StackPanel Width="{TemplateBinding Width}" Height="{TemplateBinding Width}" x:Name="panel" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <ContentPresenter Width="{TemplateBinding Width}" Height="{TemplateBinding Width}" />
+                        <StackPanel.RenderTransform>
+                            <ScaleTransform x:Name="baseST" />
+                        </StackPanel.RenderTransform>
+                        <ContentPresenter Width="{TemplateBinding Width}" Height="{TemplateBinding Width}" /> 
                     </StackPanel>
                     
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="panel" Property="Background" Value="{StaticResource BlueAzure}" />
+                            <Setter TargetName="panel" Property="Background" Value="Lightgray" />
                             <Setter TargetName="panel" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -54,11 +71,10 @@
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
-            
         </Setter>
     </Style>
 
-	<Style TargetType="TextBox"  x:Key="SelectableText">
+	<Style TargetType="TextBox" x:Key="SelectableText">
 		<Setter Property="Height" Value="25" />
 		<Setter Property="IsReadOnly" Value="True" />		
 		<Setter Property="VerticalAlignment" Value="Center" />
@@ -85,7 +101,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Border" Property="BorderBrush" Value="Transparent"/>
+                            <Setter TargetName="Border" Property="BorderBrush" Value="White"/>
                         </Trigger>
                         <Trigger Property="IsFocused" Value="true">
                             <Setter TargetName="Border" Property="Background" Value="{StaticResource BlueAzure}" />
@@ -94,6 +110,22 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    
+    <!-- EXPANDER -->
+    <DataTemplate x:Key="TitleHeader">
+        <Border BorderThickness="0,0,0,1" BorderBrush="Gainsboro" Margin="0,0,30,0">
+            <TextBlock Text="{Binding Text}" Style="{StaticResource ImportantText}"
+                        Margin="4 0"
+                        VerticalAlignment="Center"
+                        Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type Expander}}, Path=ActualWidth}" 
+                        TextWrapping="Wrap"/>
+        </Border>
+    </DataTemplate>
+
+    <Style TargetType="{x:Type Expander}">
+        <Setter Property="HeaderTemplate" Value="{StaticResource TitleHeader}"/>
+        <Setter Property="BorderThickness" Value="0" />
     </Style>
     
 </ResourceDictionary>

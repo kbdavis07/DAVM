@@ -1,21 +1,24 @@
 ﻿using Microsoft.WindowsAzure;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace DAVM.Model
 {
-    public class AzureSubscription : ModelBase
+    public class AzureSubscription : BindableObject
     {
         public CertificateCloudCredentials CloudCredentials { get; private set; }
 
-        public AzureSubscription(AzureVMController controller, string subscriptionID, string base64Certificate, string name) {
+        public AzureSubscription(AzureResourceController controller, string subscriptionID, string base64Certificate, string name) {
 
             if (String.IsNullOrEmpty(subscriptionID) || String.IsNullOrEmpty(base64Certificate) || String.IsNullOrEmpty(name))
                 throw new ArgumentNullException();
 
             ID = subscriptionID;
             Controller = controller;            
-            VMs = new ObservableCollection<AzureVM>();
+            Resources = new ObservableCollection<AzureResource>();
+
             LastUpdate = DateTime.MinValue;
             Base64Certificate = base64Certificate;
             Name = name;
@@ -31,14 +34,30 @@ namespace DAVM.Model
 
         private String Base64Certificate {  get; set; }
 
-        public  AzureVMController Controller { get; private set; }
+        public  AzureResourceController Controller { get; private set; }
 
-        public virtual ObservableCollection<AzureVM> VMs
+        public virtual ObservableCollection<AzureResource> Resources
         {
             get;
             set;
         }
 
+        public virtual List<AzureVM> VMs
+        {
+            get {
+                var vms= Resources.Where<AzureResource>((r) => r.GetType().BaseType == typeof(AzureVM));
+                return vms.Select<AzureResource,AzureVM>((x)=>(AzureVM)x).ToList();
+            }
+        }
+
+        public virtual IEnumerable<AzureWebSite> Websites
+        {
+            get
+            {
+                var vms = Resources.Where<AzureResource>((r) => r.GetType() == typeof(AzureWebSite));
+                return vms.Select<AzureResource, AzureWebSite>((x) => (AzureWebSite)x).ToList();
+            }
+        }
 
         private DateTime _LastUpdate;
         public DateTime LastUpdate
@@ -88,19 +107,28 @@ namespace DAVM.Model
             return Name;
         }
 
-        public async void RetrieveVMs()
+        public async void RetrieveAllAsync()
         {
             LastUpdate = DateTime.Now;
-            await Controller.RetrieveVMsAsync(this);
+            await Controller.RetrieveAllAsync(this);
         }
 
-        public async void StartAll() {
-            await Controller.StartAllAsync(this);
+        public async void StartAllSelected() {
+
+            //start all selected Resources
+            var selected = App.GlobalConfig.CurrentSubscription.Resources.Where((r) => r.IsSelected);
+            if (selected != null && selected.Count() > 0)
+                await Controller.StartAllAsync(selected);
+
         }
         
-        public async void StopAll()
+        public async void StopAllSelected()
         {
-            await Controller.StopAllAsync(this);
+            //start all selected Resources
+            var selected = App.GlobalConfig.CurrentSubscription.Resources.Where((r) => r.IsSelected);
+            if (selected != null && selected.Count() > 0)
+                await Controller.StopAllAsync(selected);
+
         }
 
     }
