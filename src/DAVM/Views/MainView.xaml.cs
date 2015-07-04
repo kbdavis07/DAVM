@@ -28,8 +28,14 @@ namespace DAVM.Views
 
             App.GlobalConfig.MainWindow = this;
 
-			if(App.GlobalConfig.CurrentSubscription != null)
-				App.GlobalConfig.CurrentSubscription.Controller.WorkCompleted += Controller_WorkCompleted;
+            if (App.GlobalConfig.CurrentSubscription != null)
+            {
+                App.GlobalConfig.CurrentSubscription.Controller.WorkCompleted += Controller_WorkCompleted;
+                //refresh on start
+                App.GlobalConfig.CurrentSubscription.RetrieveAllAsync();
+            }
+
+
         }
 
         private void Controller_WorkCompleted(object sender, EventArgs e)

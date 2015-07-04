@@ -1,7 +1,9 @@
 ﻿using DAVM.Common;
 using DAVM.Model;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 
 namespace DAVM.Controls
 {
@@ -45,5 +47,18 @@ namespace DAVM.Controls
 		{
 			UIHelper.LaunchRemoteConnection(WebSite);
 		}
-	}
+
+        private void KuduClick(object sender, RoutedEventArgs e)
+        {
+            if (WebSite != null)
+                Process.Start(WebSite.KuduUrl.AbsoluteUri);
+        }
+
+        private void HandleRequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            string navigateUri = ((Hyperlink)sender).NavigateUri.ToString();
+            Process.Start(new ProcessStartInfo("http://"+ navigateUri));
+            e.Handled = true;
+        }
+    }
 }

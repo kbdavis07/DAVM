@@ -33,12 +33,19 @@ namespace DAVM.Common
 
 		public static void LaunchRemoteConnection(AzureResource resource)
 		{
-			try
-			{
+            try
+            {
                 if (resource.GetType().BaseType == typeof(AzureVM))
                 {
                     //remote connection only for VM instances
                     var vm = resource as AzureVM;
+
+                    if (!vm.SupportRemoteConnection)
+                    {
+                        UIHelper.NotifyUser("Not available!", false, App.GlobalConfig.MainWindow, false);
+                        return;
+                    }
+
                     if (vm.RemoteConnectionType == RemoteConnectionType.RDP)
                     {
                         Process mstsc = new Process();
@@ -62,13 +69,20 @@ namespace DAVM.Common
                         mstsc.Start();
                     }
                 }
-			}
-			catch (Exception ex)
-			{
-				Logger.LogEntry("Could not launch the remote connection", ex);
-				UIHelper.NotifyUser("Could not start the remote connection: " + ex.Message, false, App.GlobalConfig.MainWindow, true);
 
-			}
+                if (resource.GetType() == typeof(AzureWebSite))
+                {
+                    var web = resource as AzureWebSite;
+                    if (!String.IsNullOrEmpty(web.FQDNs.First()))
+                        Process.Start("http://" + web.FQDNs.First());
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogEntry("Could not launch the remote connection", ex);
+                UIHelper.NotifyUser("Could not connect: " + ex.Message, false, App.GlobalConfig.MainWindow, true);
+
+            }
 		}
 
 		/// <summary>

@@ -40,13 +40,8 @@
         </VisualStateManager.VisualStateGroups>
         <Grid>
             <!-- Placeholder grid when nothing is selected  -->
-			<Grid x:Name="welcomeScreen" Visibility="Visible" Background="White" Opacity="0.15">
-				<!--<Image Margin="0,0,0,0" Source="/Resources/vm_generic.png" Width="140" Height="140" Stretch="Fill" >
-					<Image.RenderTransform>
-						<ScaleTransform ScaleX="1" ScaleY="1" x:Name="welcomeImageTR" />
-					</Image.RenderTransform>
-				</Image>-->
-			</Grid>
+            <Grid x:Name="welcomeScreen" Visibility="Visible" Background="White" Opacity="0.15">
+            </Grid>
 
             <!-- Main grid with details -->
 			<Grid Margin="10,5,5,5" x:Name="detailScreen" Visibility="Visible" Opacity="0" >
@@ -73,22 +68,22 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-				<!--<Border Margin="-10,-5,0,0" CornerRadius="0" Background="{StaticResource BlueAzure}" BorderThickness="0" BorderBrush="Gainsboro" Grid.Row="0" Grid.Column="0"  Grid.ColumnSpan="2" >
-					<TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{Binding VM.Name, Converter={StaticResource StringToUpper}}" Foreground="White" FontSize="16" Margin="10,0,0,0" />
-				</Border>-->
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Grid.ColumnSpan="2" Text="{Binding WebSite.Name, Converter={StaticResource StringToUpper}}" Style="{StaticResource BigTitle}" />
-
 
                 <StackPanel  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"  >
                     <Image Margin="10" Source="/Resources/windows-azure-web-site.png" HorizontalAlignment="Left" Width="60" Height="60" Stretch="Fill"/>
-                    <!--<Border Margin="10" HorizontalAlignment="Left" Width="60" Height="60" CornerRadius="3" Background="{StaticResource BlueAzure}" Visibility="{Binding VM.RemoteConnectionTypeToisibility, Converter={StaticResource BoolToVisibility}}">
-						<TextBlock Text="{Binding VM.RemoteConnectionType}" Foreground="White" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
-					</Border>-->
-			
-				</StackPanel>
+                    <Button Margin="10" BorderThickness="0" HorizontalAlignment="Left" Click="KuduClick" ToolTip="Open the management portal" Width="60" Height="60" Background="{StaticResource BlueAzure}" Cursor="Hand">
+                        <TextBlock Text="K" FontSize="30" Foreground="White" />
+                        <!--<Rectangle Width="50" Height="50">
+                            <Rectangle.Fill>
+                                <ImageBrush ImageSource="/DAVM;component/Resources/kudu.png" />
+                            </Rectangle.Fill>
+                        </Rectangle>-->
+                    </Button>
+                </StackPanel>
 
 				<TextBlock Grid.Row="2" Grid.Column="0" Text="Status:" Style="{StaticResource NormalText}"  />
-                <TextBox IsReadOnly="True" Grid.Row="2" Grid.Column="1" Text="{Binding WebSite.Status}" Style="{StaticResource SelectableText}" Foreground="{Binding VM.Status, Converter={StaticResource VMStatusToColor}}"/>
+                <TextBox IsReadOnly="True" Grid.Row="2" Grid.Column="1" Text="{Binding WebSite.Status}" Style="{StaticResource SelectableText}" Foreground="{Binding WebSite.Status, Converter={StaticResource VMStatusToColor}}"/>
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Location:" Style="{StaticResource NormalText}"  />
                 <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding WebSite.Location}" Style="{StaticResource SelectableText}"  />
@@ -97,24 +92,20 @@
                 <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding WebSite.Plan}" Style="{StaticResource SelectableText}"  />
 
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="FQDN:" Style="{StaticResource NormalText}"  />
-                <ListView Grid.Row="5" Grid.Column="1" ItemsSource="{Binding WebSite.FQDNs}" BorderThickness="0" >
+                <ListView Grid.Row="5" Grid.Column="1" ItemsSource="{Binding WebSite.FQDNs}" BorderThickness="0" SelectionMode="Single" >
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Style="{StaticResource NormalText}" Text="{Binding}" />
+                            <TextBlock>
+                                <Hyperlink NavigateUri="{Binding}" RequestNavigate="HandleRequestNavigate"  >
+                                    <Run Text="{Binding Path=., Mode=OneTime}" />
+                                 </Hyperlink>
+                            </TextBlock>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
 
-                <StackPanel Grid.Row="15" Grid.ColumnSpan="2" Orientation="Vertical">
-					<Button HorizontalAlignment="Left" Padding="4" ToolTip="Copy details to clipboard" Click="CopyDetails_Click" >
-						<Rectangle Width="12" Height="12">
-							<Rectangle.Fill>
-								<VisualBrush Stretch="Fill" Visual="{StaticResource appbar_clipboard_edit}" />
-							</Rectangle.Fill>
-						</Rectangle>
-					</Button>
-				</StackPanel>
-				
+                <davmControls:ResourceControl Grid.Row="15"  Grid.ColumnSpan="2" Resource="{Binding WebSite}" />
+
             </Grid>
         </Grid>
     </Border>

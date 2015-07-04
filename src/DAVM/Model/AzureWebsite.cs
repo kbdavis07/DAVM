@@ -81,12 +81,13 @@ namespace DAVM.Model
             }
         }
 
-     
-		#endregion
+        public Uri KuduUrl { get; set; }
 
-		#region methods
+        #endregion
 
-		public override string GetVerboseDetails() {
+        #region methods
+
+        public override string GetVerboseDetails() {
 			StringBuilder sb = new StringBuilder();
 			sb.AppendFormat("[{0}]\n", Name);
 			sb.AppendLine(String.Format("Status: {0}", Status));

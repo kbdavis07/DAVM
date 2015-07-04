@@ -166,7 +166,7 @@
                 
                 <ListView.ItemTemplate>
                     <DataTemplate >
-                        <davmControls:VMControl Resource="{Binding}" />
+                        <davmControls:AzureResourceControl Resource="{Binding}" />
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

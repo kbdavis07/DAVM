@@ -64,7 +64,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\</OutputPath>
+    <OutputPath>..\..\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -237,6 +237,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\ResourceControl.xaml.cs">
+      <DependentUpon>ResourceControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\WebSiteDetailControl.xaml.cs">
       <DependentUpon>WebSiteDetailControl.xaml</DependentUpon>
     </Compile>
@@ -263,12 +266,16 @@
     <Compile Include="Common\UIHelper.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\ViewModelLocator.cs" />
-    <Compile Include="Controls\VMControl.xaml.cs">
-      <DependentUpon>VMControl.xaml</DependentUpon>
+    <Compile Include="Controls\AzureResourceControl.xaml.cs">
+      <DependentUpon>AzureResourceControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\VMDetailControl.xaml.cs">
       <DependentUpon>VMDetailControl.xaml</DependentUpon>
     </Compile>
+    <Page Include="Controls\ResourceControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\WebSiteDetailControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -304,7 +311,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\VMControl.xaml">
+    <Page Include="Controls\AzureResourceControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -429,6 +436,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\windows-azure-web-site.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\kudu.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />

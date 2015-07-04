@@ -2,7 +2,9 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <SolidColorBrush x:Key="BlueAzure" Color="#00adef" />
-                     
+    <SolidColorBrush x:Key="White" Color="white" />
+
+
     <Style x:Key="VMName" TargetType="TextBlock" >
         <Setter Property="FontSize" Value="14 " />
         <Setter Property="FontStyle" Value="Normal" />
@@ -12,9 +14,10 @@
     </Style>
 
     <Style TargetType="ToolTip" >
-        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="Foreground" Value="White" />
         <Setter Property="Background" Value="{StaticResource BlueAzure}" />
         <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="{StaticResource White}" />
     </Style>
 
     <Style x:Key="ImportantText" TargetType="TextBlock" >
@@ -48,12 +51,15 @@
                 <ControlTemplate TargetType="Button">
                 
                     <StackPanel Width="{TemplateBinding Width}" Height="{TemplateBinding Width}" x:Name="panel" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <ContentPresenter Width="{TemplateBinding Width}" Height="{TemplateBinding Width}" />
+                        <StackPanel.RenderTransform>
+                            <ScaleTransform x:Name="baseST" />
+                        </StackPanel.RenderTransform>
+                        <ContentPresenter Width="{TemplateBinding Width}" Height="{TemplateBinding Width}" /> 
                     </StackPanel>
                     
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="panel" Property="Background" Value="{StaticResource BlueAzure}" />
+                            <Setter TargetName="panel" Property="Background" Value="Lightgray" />
                             <Setter TargetName="panel" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">

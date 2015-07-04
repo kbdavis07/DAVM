@@ -1,5 +1,4 @@
 ﻿using DAVM.Common;
-using GalaSoft.MvvmLight;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Management.Compute;
 using Microsoft.WindowsAzure.Management.Compute.Models;
@@ -88,7 +87,7 @@ namespace DAVM.Model
                     startingWorkingBarrier.SignalAndWait();
 				});
 				RaiseCompletedEvent();
-				//Logger.LogEntry(LogType.Info, "Resources started successfully");
+				Logger.LogEntry(LogType.Info, "Resources started successfully");
 
 			});
 		}
@@ -98,7 +97,7 @@ namespace DAVM.Model
 
 			await Task.Factory.StartNew(() =>
 			{
-                Logger.LogEntry(LogType.Info, "Stopping"+resources.Count()+" resources");
+                Logger.LogEntry(LogType.Info, "Stopping "+resources.Count()+" resources");
 
 				RaiseStartedEvent();
 
@@ -111,21 +110,25 @@ namespace DAVM.Model
 				   stopWorkingBarrier.SignalAndWait();
 			    });
 				RaiseCompletedEvent();
-				//Logger.LogEntry(LogType.Info, "Resources stopped successfully");
+			    Logger.LogEntry(LogType.Info, "Resources stopped successfully");
 
 			});
 
 		}
         #endregion
 
+
         #region VM
         public async Task StopResourceAsync(AzureVM vm)
-		{
-			//could not do anything when the status is pending
-			if (vm.Status == ResourceStatus.Deallocated)
-				return;
+        {
+            //could not do anything when the status is pending
+            if (vm.Status == ResourceStatus.Deallocated)
+            {
+                RaiseCompletedEvent();
+                return;
+            }
 
-			if (!ControllerInitialized)
+            if (!ControllerInitialized)
 			{
 				Logger.LogEntry(LogType.Warning, "Controller not ready");
 				return;
@@ -178,18 +181,6 @@ namespace DAVM.Model
 
 #endif
 		}
-
-        public async Task StopResourceAsync(AzureResource resource)
-        {
-            if (resource != null)
-            {
-                if (resource.GetType() == typeof(AzureWebSite))
-                    StopResourceAsync((AzureWebSite)resource);
-                else if (resource.GetType().BaseType == typeof(AzureVM))
-                    StopResourceAsync((AzureVM)resource);
-            }
-
-        }
 
         public async Task StartResourceAsync(AzureResource resource)
         {
@@ -350,7 +341,7 @@ namespace DAVM.Model
 									if (role.RoleType == VirtualMachineRoleType.PersistentVMRole.ToString())
 									{
 										var vm = RetrieveVM(deployment, subscription, role, service);
-										//this will check the status until its reach a Ready or StoppedDeallocated 
+										//this will check the status until it reaches a Ready or StoppedDeallocated 
 										if(vm.Status != ResourceStatus.Running && vm.Status != ResourceStatus.Deallocated)
 											_VMToRefresh.Add(vm);
                                         lastVMNames.Add(vm.Name);
@@ -536,6 +527,11 @@ namespace DAVM.Model
                             foreach (var w in websites)
                             {                             
                                 AzureWebSite appWeb = new AzureWebSite(subscription);
+
+                                //management portal (is always on!)
+                                var kuduUrl = w.HostNameSslStates.Where((s) => s.Name.Contains(".scm.")).First().Name;
+                                appWeb.KuduUrl = new Uri("http://"+kuduUrl);
+
                                 appWeb.Name = w.Name;
                                 appWeb.WebspaceName = webspace.Name;
                                 appWeb.Plan = w.Sku;                                
@@ -548,12 +544,16 @@ namespace DAVM.Model
                                     default: { appWeb.Status = ResourceStatus.Unknown;  break; }
                                 }
 
-                                //this will check the status until its reach a Ready or StoppedDeallocated 
+                                //this will check the status until it reaches a Ready or StoppedDeallocated 
                                 if (appWeb.Status != ResourceStatus.Running && appWeb.Status != ResourceStatus.Deallocated)
                                     _WebsiteToRefresh.Add(appWeb);
-                                
-                                //because VMs are bound to UI                                            
-                                Application.Current.Dispatcher.Invoke(() => subscription.Resources.Add(appWeb));
+
+                                //because Websites are bound to UI                                            
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    if (!subscription.Resources.Contains(appWeb))
+                                        subscription.Resources.Add(appWeb);
+                                });
 
                                 //TODO: Maybe is not unique 
                                 lastWebsiteNames.Add(appWeb.Name);
@@ -587,8 +587,10 @@ namespace DAVM.Model
 
         public async Task StopResourceAsync(AzureWebSite website)
         {
-            if (website.Status == ResourceStatus.Off)
+            if (website.Status == ResourceStatus.Off) {
+                RaiseCompletedEvent();
                 return;
+            }
 
             if (!ControllerInitialized)
             {
@@ -709,6 +711,18 @@ namespace DAVM.Model
         #endregion
 
         #region Methods
+
+        public async Task StopResourceAsync(AzureResource resource)
+        {
+            if (resource != null)
+            {
+                if (resource.GetType() == typeof(AzureWebSite))
+                    StopResourceAsync((AzureWebSite)resource);
+                else if (resource.GetType().BaseType == typeof(AzureVM))
+                    StopResourceAsync((AzureVM)resource);
+            }
+
+        }
 
         private AzureResourceController(DirectoryInfo workingFolder)
         {

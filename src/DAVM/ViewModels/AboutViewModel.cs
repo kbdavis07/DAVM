@@ -21,8 +21,6 @@ namespace DAVM.ViewModels
             }
         }
 
-
-
         #endregion
 
         public AboutViewModel()

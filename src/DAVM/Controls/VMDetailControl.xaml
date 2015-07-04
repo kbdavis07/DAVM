@@ -129,15 +129,7 @@
                 <TextBlock Grid.Row="13" Grid.Column="0" Text="Subscription ID:" Style="{StaticResource NormalText}"  />
                 <TextBox Grid.Row="13" Grid.Column="1" Text="{Binding VM.Subscription.ID}" Style="{StaticResource SelectableText}"  />
 
-				<StackPanel Grid.Row="15" Grid.ColumnSpan="2" Orientation="Vertical">
-					<Button HorizontalAlignment="Left" Padding="4" ToolTip="Copy details to clipboard" Click="CopyDetails_Click" >
-						<Rectangle Width="12" Height="12">
-							<Rectangle.Fill>
-								<VisualBrush Stretch="Fill" Visual="{StaticResource appbar_clipboard_edit}" />
-							</Rectangle.Fill>
-						</Rectangle>
-					</Button>
-				</StackPanel>
+                <davmControls:ResourceControl  Grid.Row="15" Grid.ColumnSpan="2" Resource="{Binding VM}" />		
 				
             </Grid>
         </Grid>

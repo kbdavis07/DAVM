@@ -117,7 +117,7 @@ namespace DAVM.Model
 
             //start all selected Resources
             var selected = App.GlobalConfig.CurrentSubscription.Resources.Where((r) => r.IsSelected);
-            if (selected != null || selected.Count() == 0)
+            if (selected != null && selected.Count() > 0)
                 await Controller.StartAllAsync(selected);
 
         }
@@ -126,7 +126,7 @@ namespace DAVM.Model
         {
             //start all selected Resources
             var selected = App.GlobalConfig.CurrentSubscription.Resources.Where((r) => r.IsSelected);
-            if (selected != null || selected.Count() == 0)
+            if (selected != null && selected.Count() > 0)
                 await Controller.StopAllAsync(selected);
 
         }
