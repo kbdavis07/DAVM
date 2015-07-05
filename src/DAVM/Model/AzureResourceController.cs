@@ -144,8 +144,7 @@ namespace DAVM.Model
 #else
 
 			try
-			{
-				
+			{				
 				vm.Status = ResourceStatus.Stopping;
 
 				ComputeManagementClient client = new ComputeManagementClient(vm.Subscription.CloudCredentials);
@@ -555,7 +554,6 @@ namespace DAVM.Model
                                         subscription.Resources.Add(appWeb);
                                 });
 
-                                //TODO: Maybe is not unique 
                                 lastWebsiteNames.Add(appWeb.Name);
                             }
                         }
@@ -752,8 +750,8 @@ namespace DAVM.Model
 
         public async Task RetrieveAllAsync(AzureSubscription subscription)
         {
-            RetrieveVMsAsync(subscription);
-            RetrieveWebsitesAsync(subscription);
+            await RetrieveVMsAsync(subscription);
+            await RetrieveWebsitesAsync(subscription);
         }
 
         private static DeploymentGetResponse GetAzureDeyployment(ComputeManagementClient client, string serviceName, DeploymentSlot slot)
@@ -840,15 +838,18 @@ namespace DAVM.Model
 				Logger.LogEntry(LogType.Info, String.Format("Found Azure Subscription: \"{0}\"", newAS.Name));
 				if (!AzureSubscriptions.Contains(newAS))
 					AzureSubscriptions.Add(newAS);
-			}
-		}
+            }
+
+            //statistics
+            App.GlobalConfig.Telemetry.TrackMetric(TelemetryHelper.METRIC_SUBSCRIPTION, AzureSubscriptions.Count);
+        }
 
 
-		/// <summary>
-		/// Execute the PS commands that create a file with all the Subscriptions and the management certificate
-		/// This file is needed to execute the PS Azure commands
-		/// </summary>
-		public void DownloadPublishSettings()
+        /// <summary>
+        /// Execute the PS commands that create a file with all the Subscriptions and the management certificate
+        /// This file is needed to execute the PS Azure commands
+        /// </summary>
+        public void DownloadPublishSettings()
 		{
 			try
 			{

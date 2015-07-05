@@ -1,6 +1,7 @@
 ﻿using DAVM.Model;
 using GalaSoft.MvvmLight;
 using MahApps.Metro.Controls;
+using Microsoft.ApplicationInsights;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,6 +15,8 @@ namespace DAVM.Common
 {
     public class AppResources : ObservableObject
     {
+        public TelemetryClient Telemetry { get; set; }
+
         public FileInfo LogFileName { get; set; }
 
 		#region SSH

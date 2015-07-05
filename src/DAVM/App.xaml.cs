@@ -10,6 +10,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 
 namespace DAVM
 {
@@ -31,7 +34,17 @@ namespace DAVM
                 DefaultValue = FindResource(typeof(Window))
             });
 
+            this.Exit += App_Exit;
+
+            //Application Insights global config
+            TelemetryConfiguration.Active.InstrumentationKey = "4e9fa934-a7e3-4f39-b825-ff0a843ec0f0";
+            //to get user and session
+            TelemetryConfiguration.Active.ContextInitializers.Add(new UserSessionInitializer());
+
             GlobalConfig = new AppResources();
+
+            GlobalConfig.Telemetry = new TelemetryClient();
+            GlobalConfig.Telemetry.TrackEvent(TelemetryHelper.EVT_START);
 
             GlobalConfig.AppDirectory = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\DAVM");
             if (!GlobalConfig.AppDirectory.Exists)
@@ -53,6 +66,13 @@ namespace DAVM
 
             InitApp();
 
+        }
+
+        private void App_Exit(object sender, ExitEventArgs e)
+        {
+            //report telemetry data
+            if (GlobalConfig.Telemetry != null)
+                GlobalConfig.Telemetry.Flush();
         }
 
         private void InitApp()
@@ -80,8 +100,6 @@ namespace DAVM
 				GlobalConfig.SSHClientCmdLine = DAVM.Properties.Settings.Default.SSHClientCmdLine;
 
 			}
-
 		}
-
-	}
+    }
 }

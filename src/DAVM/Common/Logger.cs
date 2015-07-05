@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.ApplicationInsights.DataContracts;
+using System;
 using System.Diagnostics;
 
 namespace DAVM.Common
@@ -61,6 +62,12 @@ namespace DAVM.Common
                 LogEntry(new InfoMessage() { Message = ex.InnerException.Message, Level = LogType.Error });
                 LogEntry(new InfoMessage() { Message = ex.InnerException.StackTrace, Level = LogType.Verbose });
                 ex = ex.InnerException;
+            }
+
+            if (App.GlobalConfig.Telemetry != null)
+            {
+                ExceptionTelemetry exTel = new ExceptionTelemetry(ex);
+                App.GlobalConfig.Telemetry.TrackException(exTel);
             }
         }
 
