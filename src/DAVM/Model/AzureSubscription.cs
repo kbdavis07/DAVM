@@ -1,4 +1,5 @@
-﻿using Microsoft.WindowsAzure;
+﻿using DAVM.Common;
+using Microsoft.WindowsAzure;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -42,7 +43,7 @@ namespace DAVM.Model
             set;
         }
 
-        public virtual List<AzureVM> VMs
+        public virtual IEnumerable<AzureVM> VMs
         {
             get {
                 var vms= Resources.Where<AzureResource>((r) => r.GetType().BaseType == typeof(AzureVM));
@@ -111,6 +112,10 @@ namespace DAVM.Model
         {
             LastUpdate = DateTime.Now;
             await Controller.RetrieveAllAsync(this);
+
+            //statistics
+            App.GlobalConfig.Telemetry.TrackMetric(TelemetryHelper.METRIC_VM, VMs.Count());
+            App.GlobalConfig.Telemetry.TrackMetric(TelemetryHelper.METRIC_WEBSITE, Websites.Count());
         }
 
         public async void StartAllSelected() {
