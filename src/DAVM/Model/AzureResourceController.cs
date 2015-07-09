@@ -384,25 +384,27 @@ namespace DAVM.Model
 			//find the instance related to this VM, it does contains more information
 			var realInstance = deployment.RoleInstances.Where((i) => i.RoleName == role.RoleName).FirstOrDefault();
 
-			// if there is a VM with the same name in the main list use it
-			AzureVM vm = subscription.VMs.Where((v) =>v.Name == role.RoleName && v.ServiceName == service.ServiceName).FirstOrDefault();
+            AzureVM vm;
 
-			//otherwise create a new one
-            if (vm == null)
-			{
-				switch (role.OSVirtualHardDisk.OperatingSystem)
-				{
-					case "Windows": { vm = new WindowsVM(subscription); break; }
-					default: { vm = new LinuxVM(subscription); break; }
-				}
-
-				//because VMs are bound to UI                                            
-				Application.Current.Dispatcher.Invoke(()=>subscription.Resources.Add(vm)); 
-
+            // if there is a VM with the same name in the main list use it
+            var vms = subscription.VMs.Where((v) =>v.Name == role.RoleName && v.ServiceName == service.ServiceName);
+                      
+            if (vms.Count() > 0)
+                vm = vms.First();
+                //otherwise create a new one
+            else
+            {
+                vm = new AzureVM(subscription);
+                switch (role.OSVirtualHardDisk.OperatingSystem)
+                {
+                    case "Windows": { vm = new WindowsVM(subscription); break; }
+                    default: { vm = new LinuxVM(subscription); break; }
+                }
             }
+            
 
-			//refresh all properties
-			vm.Location = service.Properties.Location;
+            //refresh all properties
+            vm.Location = service.Properties.Location;
 
 			//resource group is not mandatory, might not exists
 			if (service.Properties.ExtendedProperties != null && service.Properties.ExtendedProperties.ContainsKey("ResourceGroup"))
@@ -481,7 +483,16 @@ namespace DAVM.Model
 				}
 			}
 
-			Logger.LogEntry(LogType.Info, String.Format("Found VM: {0} ({1})", vm.Name, vm.ServiceName));
+            //because VMs are bound to UI                                            
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                //adding if was missing
+                if (!subscription.Resources.Contains(vm))
+                    subscription.Resources.Add(vm);
+            }
+           );
+
+            Logger.LogEntry(LogType.Info, String.Format("Found VM: {0} ({1})", vm.Name, vm.ServiceName));
 			return vm;
 		}
 
