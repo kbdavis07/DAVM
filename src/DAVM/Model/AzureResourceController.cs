@@ -68,7 +68,7 @@ namespace DAVM.Model
 		{
 			IsWorking = true;
 			if (WorkStarted != null)
-				foreach (var m in WorkCompleted.GetInvocationList())
+				foreach (var m in WorkStarted.GetInvocationList())
 					m.DynamicInvoke(this, null);
         }
 
